@@ -30,12 +30,14 @@ def process_book_task(self, book_id: str):
     logger.info("book_processing_started", book_id=book_id)
     
     db = SessionLocal()
+    book = None
     
     try:
         # Get book from database
-        book = db.execute(
+        result = db.execute(
             select(Book).where(Book.id == book_id)
-        ).scalar_one_or_none()
+        )
+        book = result.scalar_one_or_none()
         
         if not book:
             logger.error("book_not_found", book_id=book_id)
@@ -43,6 +45,24 @@ def process_book_task(self, book_id: str):
         
         # Update status
         book.processing_status = "processing"
+        db.commit()
+        
+        # Extract metadata first
+        file_metadata = {}
+        if book.file_type == "epub":
+            file_metadata = extract_epub_metadata(book.file_path)
+        elif book.file_type == "pdf":
+            file_metadata = extract_pdf_metadata(book.file_path)
+        
+        # Update book with extracted metadata if not already set
+        if file_metadata.get('author') and not book.author:
+            book.author = file_metadata['author']
+            logger.info("extracted_author", book_id=book_id, author=book.author)
+        
+        if file_metadata.get('title') and (not book.title or book.title == book.original_filename):
+            book.title = file_metadata['title']
+            logger.info("extracted_title", book_id=book_id, title=book.title)
+        
         db.commit()
         
         # Extract text based on file type
@@ -166,6 +186,53 @@ def extract_text_from_epub(file_path: str) -> str:
         
         return text.strip()
         
+    except Exception as e:
+        logger.error("epub_extraction_failed", error=str(e))
+        raise
+
+
+def extract_epub_metadata(file_path: str) -> dict:
+    """Extract metadata from EPUB file"""
+    try:
+        book = epub.read_epub(file_path)
+        metadata = {}
+        
+        # Try to get author
+        author = book.get_metadata('DC', 'creator')
+        if author and len(author) > 0:
+            metadata['author'] = author[0][0]
+        
+        # Try to get title
+        title = book.get_metadata('DC', 'title')
+        if title and len(title) > 0:
+            metadata['title'] = title[0][0]
+        
+        return metadata
+    except Exception as e:
+        logger.error("epub_metadata_extraction_failed", error=str(e))
+        return {}
+
+
+def extract_pdf_metadata(file_path: str) -> dict:
+    """Extract metadata from PDF file"""
+    try:
+        with open(file_path, "rb") as file:
+            pdf_reader = PyPDF2.PdfReader(file)
+            metadata = {}
+            
+            if pdf_reader.metadata:
+                # Try to get author
+                if pdf_reader.metadata.get('/Author'):
+                    metadata['author'] = pdf_reader.metadata.get('/Author')
+                
+                # Try to get title
+                if pdf_reader.metadata.get('/Title'):
+                    metadata['title'] = pdf_reader.metadata.get('/Title')
+            
+            return metadata
+    except Exception as e:
+        logger.error("pdf_metadata_extraction_failed", error=str(e))
+        return {}
     except Exception as e:
         logger.error("epub_extraction_failed", error=str(e))
         raise

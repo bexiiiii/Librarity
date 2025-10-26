@@ -28,7 +28,7 @@ class UserLogin(BaseModel):
 
 class UserResponse(UserBase):
     id: UUID4
-    role: UserRole
+    role: str  # Changed from UserRole to str for JSON serialization
     is_active: bool
     is_verified: bool
     created_at: datetime
@@ -36,6 +36,22 @@ class UserResponse(UserBase):
     
     class Config:
         from_attributes = True
+        
+    @classmethod
+    def from_orm(cls, obj):
+        # Convert UserRole enum to string value
+        data = {
+            "id": obj.id,
+            "email": obj.email,
+            "username": obj.username,
+            "full_name": obj.full_name,
+            "role": obj.role.value if hasattr(obj.role, 'value') else obj.role,
+            "is_active": obj.is_active,
+            "is_verified": obj.is_verified,
+            "created_at": obj.created_at,
+            "last_login": obj.last_login
+        }
+        return cls(**data)
 
 
 class TokenResponse(BaseModel):

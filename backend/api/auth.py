@@ -201,4 +201,5 @@ async def get_me(
     user: User = Depends(get_current_user)
 ):
     """Get current user info"""
+    logger.info("get_me_called", user_id=str(user.id), email=user.email, role=str(user.role), role_value=user.role.value)
     return user

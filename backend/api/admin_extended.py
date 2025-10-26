@@ -1,7 +1,7 @@
 # Extended Admin API endpoints
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, desc, and_
+from sqlalchemy import select, func, desc, and_, or_
 from typing import List, Optional
 from datetime import datetime, timedelta
 
@@ -11,7 +11,7 @@ from models.book import Book
 from models.chat import Chat
 from models.subscription import Subscription
 from models.shared_content import SharedContent
-from services.auth_service import get_current_user
+from api.auth import get_current_user
 from services.email_service import email_service
 from services.telegram_service import telegram_service
 from services.leaderboard_service import leaderboard_service
@@ -228,31 +228,60 @@ async def delete_user(
 
 @router.get("/books")
 async def get_all_books(
-    skip: int = 0,
-    limit: int = 100,
-    status: Optional[str] = None,
+    skip: int = Query(0, ge=0),
+    limit: int = Query(100, le=100),
+    search: Optional[str] = Query(None),
+    status: Optional[str] = Query(None),
     db: AsyncSession = Depends(get_db),
     admin: User = Depends(get_admin_user)
 ):
     """Get all books with filters"""
     
-    query = select(Book, User).join(User)
+    # Build query with join to get owner info
+    query = select(Book, User).join(User, Book.owner_id == User.id)
     
+    # Apply search filter
+    if search:
+        query = query.where(
+            or_(
+                Book.title.ilike(f"%{search}%"),
+                Book.author.ilike(f"%{search}%")
+            )
+        )
+    
+    # Apply status filter
     if status:
         query = query.where(Book.processing_status == status)
     
+    # Get total count before pagination
+    count_query = select(func.count(Book.id))
+    if search:
+        count_query = count_query.where(
+            or_(
+                Book.title.ilike(f"%{search}%"),
+                Book.author.ilike(f"%{search}%")
+            )
+        )
+    if status:
+        count_query = count_query.where(Book.processing_status == status)
+    
+    total = await db.scalar(count_query) or 0
+    
+    # Apply pagination
     query = query.order_by(desc(Book.created_at)).offset(skip).limit(limit)
     
     result = await db.execute(query)
     rows = result.all()
     
-    return [
+    books_data = [
         {
             "id": str(book.id),
             "title": book.title,
             "author": book.author,
             "file_type": book.file_type,
             "file_size": book.file_size,
+            "total_pages": book.total_pages,
+            "total_chunks": book.total_chunks,
             "processing_status": book.processing_status,
             "is_processed": book.is_processed,
             "owner": {
@@ -260,10 +289,16 @@ async def get_all_books(
                 "email": user.email,
                 "username": user.username
             },
-            "created_at": book.created_at.isoformat()
+            "created_at": book.created_at.isoformat() if book.created_at else None,
+            "processed_at": book.processed_at.isoformat() if book.processed_at else None
         }
         for book, user in rows
     ]
+    
+    return {
+        "books": books_data,
+        "total": total
+    }
 
 @router.delete("/books/{book_id}")
 async def delete_book(
@@ -456,3 +491,56 @@ async def broadcast_notification(
         "total": len(users),
         "sent": sent_count
     }
+
+
+# ==================== BOOKS MANAGEMENT ====================
+# (Books endpoints moved to earlier in file - lines 229-297)
+
+@router.delete("/books/{book_id}")
+async def delete_admin_book(
+    book_id: str,
+    db: AsyncSession = Depends(get_db),
+    admin: User = Depends(get_admin_user)
+):
+    """Delete a book (admin only)"""
+    
+    result = await db.execute(
+        select(Book).where(Book.id == book_id)
+    )
+    book = result.scalar_one_or_none()
+    
+    if not book:
+        raise HTTPException(status_code=404, detail="Book not found")
+    
+    await db.delete(book)
+    await db.commit()
+    
+    return {"message": f"Book '{book.title}' deleted successfully"}
+
+
+@router.post("/books/{book_id}/reprocess")
+async def reprocess_book(
+    book_id: str,
+    db: AsyncSession = Depends(get_db),
+    admin: User = Depends(get_admin_user)
+):
+    """Reprocess a book"""
+    
+    result = await db.execute(
+        select(Book).where(Book.id == book_id)
+    )
+    book = result.scalar_one_or_none()
+    
+    if not book:
+        raise HTTPException(status_code=404, detail="Book not found")
+    
+    # Reset processing status
+    book.processing_status = "pending"
+    book.processing_error = None
+    book.processed_at = None
+    
+    await db.commit()
+    
+    # TODO: Trigger reprocessing task
+    
+    return {"message": f"Book '{book.title}' queued for reprocessing"}

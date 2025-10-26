@@ -5,13 +5,16 @@ Main FastAPI Application Entry Point
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
 import time
 import structlog
+import os
 
 from core.config import settings
 from core.database import engine, Base
-from api import auth, books, chat, subscription, admin
+from api import auth, books, chat, subscription, admin, analytics, revenue, billing, polar_api, fix_subscription
+from api import admin_extended
 from core.logging_config import setup_logging
 
 # Setup structured logging
@@ -117,13 +120,34 @@ async def health_check():
         "service": "Librarity AI"
     }
 
+@app.get("/api/health", tags=["System"])
+async def api_health_check():
+    """API health check"""
+    return {
+        "status": "healthy",
+        "version": "1.0.0",
+        "service": "Librarity AI"
+    }
+
 
 # API Routes
 app.include_router(auth.router, prefix="/api/auth", tags=["Authentication"])
 app.include_router(books.router, prefix="/api/books", tags=["Books"])
 app.include_router(chat.router, prefix="/api/chat", tags=["Chat"])
 app.include_router(subscription.router, prefix="/api/subscription", tags=["Subscription"])
+app.include_router(billing.router, prefix="/api", tags=["Billing"])
+app.include_router(polar_api.router, prefix="/api", tags=["Polar"])
+app.include_router(fix_subscription.router, prefix="/api", tags=["Fix"])
 app.include_router(admin.router, prefix="/api/admin", tags=["Admin"])
+app.include_router(admin_extended.router, prefix="/api/admin", tags=["Admin Extended"])
+app.include_router(analytics.router, prefix="/api", tags=["Analytics"])
+app.include_router(revenue.router, prefix="/api", tags=["Revenue & Payments"])
+
+# Mount uploads directory for serving files
+uploads_dir = os.path.join(os.path.dirname(__file__), "uploads")
+if not os.path.exists(uploads_dir):
+    os.makedirs(uploads_dir)
+app.mount("/uploads", StaticFiles(directory=uploads_dir), name="uploads")
 
 
 @app.get("/")

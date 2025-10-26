@@ -40,16 +40,33 @@ async def upload_book(
     )
     subscription = result.scalar_one_or_none()
     
+    # If no subscription, create free tier subscription
+    if not subscription:
+        from core.config import get_settings
+        settings = get_settings()
+        subscription = Subscription(
+            user_id=current_user.id,
+            tier="free",
+            status="active",
+            token_limit=settings.FREE_TIER_TOKEN_LIMIT,
+            tokens_used=0,
+            max_books=1
+        )
+        db.add(subscription)
+        await db.commit()
+        await db.refresh(subscription)
+    
     # Count user's books
     result = await db.execute(
         select(func.count(Book.id)).where(Book.owner_id == current_user.id)
     )
     book_count = result.scalar()
     
-    if subscription and book_count >= subscription.max_books:
+    # Check book limit (max_books = -1 means unlimited)
+    if subscription.max_books != -1 and book_count >= subscription.max_books:
         raise HTTPException(
             status_code=status.HTTP_402_PAYMENT_REQUIRED,
-            detail=f"Book limit reached. Upgrade your plan to upload more books."
+            detail=f"Book limit reached ({subscription.max_books} books max). Upgrade your plan to upload more books."
         )
     
     # Validate file type

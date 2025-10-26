@@ -65,4 +65,10 @@ class Book(Base):
         return self.is_processed and self.processing_status == "completed"
     
     def __repr__(self):
-        return f"<Book {self.title} by {self.author}>"
+        # Use object.__getattribute__ to avoid triggering lazy loading
+        try:
+            title = object.__getattribute__(self, '_sa_instance_state').dict.get('title', 'Unknown')
+            author = object.__getattribute__(self, '_sa_instance_state').dict.get('author', 'Unknown')
+            return f"<Book {title} by {author}>"
+        except:
+            return f"<Book id={self.id}>"
