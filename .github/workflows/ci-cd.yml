@@ -1,0 +1,179 @@
+# GitHub Actions CI/CD Pipeline
+name: Librarity CI/CD
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test-backend:
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: librarity_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+      
+      redis:
+        image: redis:7
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install dependencies
+      run: |
+        cd backend
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pytest pytest-asyncio pytest-cov
+    
+    - name: Run linting
+      run: |
+        cd backend
+        pip install flake8 black isort
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        black --check .
+        isort --check-only .
+    
+    - name: Run tests
+      env:
+        DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/librarity_test
+        REDIS_URL: redis://localhost:6379
+        SECRET_KEY: test-secret-key
+        JWT_SECRET_KEY: test-jwt-secret
+        GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+      run: |
+        cd backend
+        pytest --cov=. --cov-report=xml
+    
+    - name: Upload coverage
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./backend/coverage.xml
+
+  test-frontend:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+    
+    - name: Install dependencies
+      run: |
+        cd librarity
+        npm install
+    
+    - name: Run linting
+      run: |
+        cd librarity
+        npm run lint
+    
+    - name: Run tests
+      run: |
+        cd librarity
+        npm test
+    
+    - name: Build
+      run: |
+        cd librarity
+        npm run build
+
+  test-admin:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+    
+    - name: Install dependencies
+      run: |
+        cd admin
+        npm install
+    
+    - name: Build
+      run: |
+        cd admin
+        npm run build
+
+  deploy-backend:
+    needs: [test-backend]
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Deploy to Render
+      env:
+        RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+      run: |
+        curl -X POST "https://api.render.com/v1/services/${{ secrets.RENDER_SERVICE_ID }}/deploys" \
+          -H "Authorization: Bearer $RENDER_API_KEY" \
+          -H "Content-Type: application/json"
+
+  deploy-frontend:
+    needs: [test-frontend]
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Deploy to Vercel
+      env:
+        VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+        VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+      run: |
+        npm install -g vercel
+        cd librarity
+        vercel --prod --token $VERCEL_TOKEN
+
+  deploy-admin:
+    needs: [test-admin]
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Deploy Admin to Vercel
+      env:
+        VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+        VERCEL_ADMIN_PROJECT_ID: ${{ secrets.VERCEL_ADMIN_PROJECT_ID }}
+      run: |
+        npm install -g vercel
+        cd admin
+        vercel --prod --token $VERCEL_TOKEN

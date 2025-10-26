@@ -1,0 +1,148 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: librarity_postgres
+    environment:
+      POSTGRES_USER: librarity
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: librarity
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U librarity"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: librarity_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Qdrant Vector Database
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: librarity_qdrant
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - qdrant_data:/qdrant/storage
+    environment:
+      QDRANT__SERVICE__GRPC_PORT: 6334
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:6333/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # FastAPI Backend
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: librarity_backend
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./backend/.env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://librarity:password@postgres:5432/librarity
+      REDIS_URL: redis://redis:6379/0
+      QDRANT_URL: http://qdrant:6333
+      CELERY_BROKER_URL: redis://redis:6379/1
+      CELERY_RESULT_BACKEND: redis://redis:6379/2
+    volumes:
+      - ./backend:/app
+      - book_uploads:/app/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      qdrant:
+        condition: service_healthy
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+
+  # Celery Worker
+  celery_worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: librarity_celery_worker
+    env_file:
+      - ./backend/.env
+    environment:
+      DATABASE_URL: postgresql://librarity:password@postgres:5432/librarity
+      REDIS_URL: redis://redis:6379/0
+      QDRANT_URL: http://qdrant:6333
+      CELERY_BROKER_URL: redis://redis:6379/1
+      CELERY_RESULT_BACKEND: redis://redis:6379/2
+    volumes:
+      - ./backend:/app
+      - book_uploads:/app/uploads
+    depends_on:
+      - redis
+      - postgres
+      - qdrant
+    command: celery -A workers.celery_app worker --loglevel=info
+
+  # Celery Flower (Monitoring)
+  celery_flower:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: librarity_celery_flower
+    ports:
+      - "5555:5555"
+    env_file:
+      - ./backend/.env
+    environment:
+      CELERY_BROKER_URL: redis://redis:6379/1
+      CELERY_RESULT_BACKEND: redis://redis:6379/2
+    depends_on:
+      - redis
+      - celery_worker
+    command: celery -A workers.celery_app flower --port=5555
+
+  # Next.js Frontend
+  frontend:
+    build:
+      context: ./librarity
+      dockerfile: Dockerfile
+    container_name: librarity_frontend
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8000/api
+    volumes:
+      - ./librarity:/app
+      - /app/node_modules
+      - /app/.next
+    depends_on:
+      - backend
+    command: npm run dev
+
+volumes:
+  postgres_data:
+  redis_data:
+  qdrant_data:
+  book_uploads:
+
+networks:
+  default:
+    name: librarity_network

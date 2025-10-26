@@ -1,0 +1,21 @@
+# Development files
+*.md
+.vscode/
+.idea/
+
+# Git
+.git/
+.gitignore
+
+# Tests
+*.test.ts
+*.test.tsx
+*.spec.ts
+*.spec.tsx
+
+# Documentation
+README.md
+SIDEBAR_README.md
+
+# Misc
+.DS_Store

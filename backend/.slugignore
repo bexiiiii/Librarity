@@ -1,0 +1,57 @@
+# Python cache
+*.pyc
+__pycache__/
+*.pyo
+*.pyd
+.Python
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# Documentation
+*.md
+docs/
+
+# Development
+.env
+.env.local
+.venv/
+venv/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+
+# Docker (не нужны в slug)
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Uploads (должны быть в S3)
+uploads/
+temp/
+
+# Tests
+tests/
+test_*.py
+*_test.py
+
+# Misc
+*.log
+.DS_Store
