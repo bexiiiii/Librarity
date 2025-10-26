@@ -166,8 +166,31 @@ class APIClient {
     return this.request('/admin/stats');
   }
 
+  async getAdminOverviewStats() {
+    return this.request('/admin/stats/overview');
+  }
+
+  async getAdminGrowthStats(days = 30) {
+    return this.request(`/admin/stats/growth?days=${days}`);
+  }
+
   async getAllUsers(page = 1, pageSize = 50) {
     return this.request(`/admin/users?page=${page}&page_size=${pageSize}`);
+  }
+
+  async searchUsers(query: string, skip = 0, limit = 50) {
+    return this.request(`/admin/users/search?q=${query}&skip=${skip}&limit=${limit}`);
+  }
+
+  async updateUserRole(userId: string, role: string) {
+    return this.request(`/admin/users/${userId}/role`, {
+      method: 'PATCH',
+      body: JSON.stringify({ role }),
+    });
+  }
+
+  async deleteUser(userId: string) {
+    return this.request(`/admin/users/${userId}`, { method: 'DELETE' });
   }
 
   async banUser(userId: string) {
@@ -180,6 +203,164 @@ class APIClient {
 
   async getAllBooks(page = 1, pageSize = 50) {
     return this.request(`/admin/books?page=${page}&page_size=${pageSize}`);
+  }
+
+  async getAdminBooks(page = 1, pageSize = 20, search?: string, status?: string) {
+    let query = `page=${page}&page_size=${pageSize}`;
+    if (search) query += `&search=${encodeURIComponent(search)}`;
+    if (status) query += `&status=${status}`;
+    return this.request(`/admin/books?${query}`);
+  }
+
+  async deleteAdminBook(bookId: string) {
+    return this.request(`/admin/books/${bookId}`, { method: 'DELETE' });
+  }
+
+  async reprocessBook(bookId: string) {
+    return this.request(`/admin/books/${bookId}/reprocess`, { method: 'POST' });
+  }
+
+  async getTrendingContent(limit = 20) {
+    return this.request(`/admin/content/trending?limit=${limit}`);
+  }
+
+  async featureContent(contentId: string, isFeatured: boolean) {
+    return this.request(`/admin/content/${contentId}/feature`, {
+      method: 'PATCH',
+      body: JSON.stringify({ is_featured: isFeatured }),
+    });
+  }
+
+  async recalculateLeaderboard() {
+    return this.request('/admin/leaderboard/calculate', { method: 'POST' });
+  }
+
+  async getLeaderboardTop(limit = 100) {
+    return this.request(`/admin/leaderboard/top?limit=${limit}`);
+  }
+
+  async testEmail(email: string) {
+    return this.request('/admin/notifications/test-email', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    });
+  }
+
+  async testTelegram() {
+    return this.request('/admin/notifications/test-telegram', { method: 'POST' });
+  }
+
+  async broadcastNotification(subject: string, message: string) {
+    return this.request('/admin/notifications/broadcast', {
+      method: 'POST',
+      body: JSON.stringify({ subject, message }),
+    });
+  }
+
+  // Analytics endpoints
+  async getBookAnalytics(limit = 10) {
+    return this.request(`/admin/analytics/books?limit=${limit}`);
+  }
+
+  async getTopicAnalytics(limit = 10) {
+    return this.request(`/admin/analytics/topics?limit=${limit}`);
+  }
+
+  async getAIIssues(days = 7) {
+    return this.request(`/admin/analytics/ai-issues?days=${days}`);
+  }
+
+  async getEngagementTrends(days = 30) {
+    return this.request(`/admin/analytics/engagement?days=${days}`);
+  }
+
+  async getStartupMetrics(days = 30) {
+    return this.request(`/admin/analytics/startup-metrics?days=${days}`);
+  }
+
+  // Revenue endpoints
+  async getRevenueStats() {
+    return this.request('/admin/revenue/stats');
+  }
+
+  async getPaymentHistory(page = 1, pageSize = 20) {
+    return this.request(`/admin/payments?page=${page}&page_size=${pageSize}`);
+  }
+
+  // Promo code endpoints
+  async getPromoCodes(skip = 0, limit = 100) {
+    return this.request(`/admin/promo-codes?skip=${skip}&limit=${limit}`);
+  }
+
+  async createPromoCode(data: {
+    code: string;
+    discount_percent: number;
+    max_uses: number;
+    tier: string;
+    expires_days: number;
+  }) {
+    return this.request('/admin/promo-codes', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async togglePromoCode(codeId: string, isActive: boolean) {
+    return this.request(`/admin/promo-codes/${codeId}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ is_active: isActive }),
+    });
+  }
+
+  async deletePromoCode(codeId: string) {
+    return this.request(`/admin/promo-codes/${codeId}`, { method: 'DELETE' });
+  }
+
+  // User tier management
+  async updateUserTier(userId: string, tier: string) {
+    return this.request(`/admin/users/${userId}/subscription`, {
+      method: 'PATCH',
+      body: JSON.stringify({ tier }),
+    });
+  }
+
+  // Content management endpoints
+  async getSharedContent(page = 1, pageSize = 20) {
+    return this.request(`/admin/content/shared?page=${page}&page_size=${pageSize}`);
+  }
+
+  // System logs endpoints
+  async getSystemLogs(category = 'all', page = 1, pageSize = 50, days = 7) {
+    return this.request(`/admin/logs?category=${category}&page=${page}&page_size=${pageSize}&days=${days}`);
+  }
+
+  // System settings endpoints
+  async getSystemSettings() {
+    return this.request('/admin/system-settings');
+  }
+
+  // Billing endpoints
+  async getBillingHistory() {
+    return this.request('/billing/history');
+  }
+
+  async applyPromoCode(code: string) {
+    return this.request('/billing/apply-promo', {
+      method: 'POST',
+      body: JSON.stringify({ code }),
+    });
+  }
+
+  // Polar.sh endpoints
+  async createPolarCheckout(tier: string, billingInterval: string = 'monthly') {
+    return this.request('/polar/create-checkout', {
+      method: 'POST',
+      body: JSON.stringify({ tier, billing_interval: billingInterval }),
+    });
+  }
+
+  async checkPolarStatus() {
+    return this.request('/polar/status');
   }
 }
 

@@ -1,288 +1,273 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { 
-  Users, 
-  BookOpen, 
-  MessageSquare, 
-  Coins, 
-  TrendingUp,
-  Shield,
-  Activity,
-  Ban
-} from "lucide-react";
 import api from "@/lib/api";
 
-interface AdminStats {
-  total_users: number;
-  active_users: number;
-  total_books: number;
-  total_chats: number;
-  total_tokens_used: number;
-  subscriptions_by_tier: Record<string, number>;
+// Import components
+import { Sidebar } from "@/components/admin/Sidebar";
+import { DashboardTab } from "@/components/admin/DashboardTab";
+import { UsersTab } from "@/components/admin/UsersTab";
+import { BooksTab } from "@/components/admin/BooksTab";
+import { AnalyticsTab } from "@/components/admin/AnalyticsTab";
+import { RevenueTab } from "@/components/admin/RevenueTab";
+import { ContentTab } from "@/components/admin/ContentTab";
+import { SystemHealthTab } from "@/components/admin/SystemHealthTab";
+import { LogsTab } from "@/components/admin/LogsTab";
+import { SettingsTab } from "@/components/admin/SettingsTab";
+import { MetricsTab } from "@/components/admin/MetricsTab";
+
+interface OverviewStats {
+  users: {
+    total: number;
+    active: number;
+    today: number;
+    week: number;
+    free: number;
+    pro: number;
+    ultimate: number;
+  };
+  books: {
+    total: number;
+    today: number;
+    week: number;
+  };
+  chats: {
+    total: number;
+    today: number;
+    week: number;
+  };
+  tokens: {
+    total: number;
+    today: number;
+    week: number;
+  };
+}
+
+interface GrowthData {
+  date: string;
+  count: number;
 }
 
 interface AdminUser {
   id: string;
   email: string;
   username?: string;
-  full_name?: string;
   role: string;
-  is_active: boolean;
   created_at: string;
-  subscription?: {
-    tier: string;
-    tokens_used: number;
-    token_limit: number;
-  };
-  total_books: number;
-  total_chats: number;
-  total_tokens_used: number;
+  is_banned: boolean;
 }
 
-export default function AdminDashboard() {
-  const [stats, setStats] = useState<AdminStats | null>(null);
-  const [users, setUsers] = useState<AdminUser[]>([]);
+interface CurrentUser {
+  email: string;
+  username?: string;
+  role: string;
+}
+
+export default function AdminPage() {
+  const router = useRouter();
+  const [activeTab, setActiveTab] = useState("dashboard");
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"overview" | "users" | "books">("overview");
+  const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
 
-  useEffect(() => {
-    loadData();
-  }, [activeTab]);
+  // Dashboard data
+  const [overviewStats, setOverviewStats] = useState<OverviewStats>({
+    users: { total: 0, active: 0, today: 0, week: 0, free: 0, pro: 0, ultimate: 0 },
+    books: { total: 0, today: 0, week: 0 },
+    chats: { total: 0, today: 0, week: 0 },
+    tokens: { total: 0, today: 0, week: 0 },
+  });
+  const [growthData, setGrowthData] = useState<{
+    users: GrowthData[];
+    books: GrowthData[];
+    chats: GrowthData[];
+    tokens: GrowthData[];
+  }>({
+    users: [],
+    books: [],
+    chats: [],
+    tokens: [],
+  });
 
-  const loadData = async () => {
+  // Users tab data
+  const [users, setUsers] = useState<AdminUser[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+
+  const checkAuthAndLoadData = async () => {
+    console.log("=== ADMIN AUTH CHECK STARTED ===");
     try {
-      setLoading(true);
-      const statsData = await api.getAdminStats();
-      setStats(statsData);
-
-      if (activeTab === "users") {
-        const usersData = await api.getAllUsers();
-        setUsers(usersData);
+      const token = localStorage.getItem("access_token"); // Changed from "token" to "access_token"
+      console.log("Token exists:", !!token);
+      if (!token) {
+        console.log("No token, redirecting to login");
+        router.push("/admin/login");
+        return;
       }
+
+      console.log("Fetching current user...");
+      const user = await api.getCurrentUser();
+      console.log("=== USER DATA RECEIVED ===");
+      console.log("Full user object:", JSON.stringify(user, null, 2));
+      console.log("User role:", user.role);
+      console.log("User role type:", typeof user.role);
+      console.log("User email:", user.email);
+      
+      // Check if user is admin (handle both "admin" and "UserRole.ADMIN" formats)
+      const isAdmin = user.role === "admin" || 
+                      user.role === "UserRole.ADMIN" || 
+                      user.role?.toLowerCase() === "admin" ||
+                      (typeof user.role === 'object' && user.role?.value === "admin");
+      
+      console.log("Is admin check result:", isAdmin);
+      
+      if (!isAdmin) {
+        console.log("❌ User is not admin, redirecting to home. Role was:", user.role);
+        router.push("/");
+        return;
+      }
+
+      console.log("✅ User is admin, loading dashboard");
+      setCurrentUser(user);
+      await loadData();
     } catch (error) {
-      console.error("Failed to load admin data:", error);
+      console.error("❌ Auth check failed:", error);
+      router.push("/admin/login");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleBanUser = async (userId: string, isActive: boolean) => {
+  const loadData = async () => {
     try {
-      if (isActive) {
-        await api.banUser(userId);
-      } else {
-        await api.unbanUser(userId);
+      // Load dashboard data
+      const [overview, growth] = await Promise.all([
+        api.getAdminOverviewStats(),
+        api.getAdminGrowthStats(7),
+      ]);
+
+      setOverviewStats(overview);
+      setGrowthData(growth);
+
+      // Load users data if on users tab
+      if (activeTab === "users") {
+        await loadUsers();
       }
-      loadData();
     } catch (error) {
-      console.error("Failed to ban/unban user:", error);
+      console.error("Failed to load data:", error);
+    }
+  };
+
+  const loadUsers = async () => {
+    try {
+      const page = isNaN(currentPage) || currentPage < 1 ? 1 : currentPage;
+      const response = await api.getAllUsers(page, 20);
+      setUsers(response.users || []);
+      setTotalPages(Math.ceil(response.total / 20));
+    } catch (error) {
+      console.error("Failed to load users:", error);
+    }
+  };
+
+  useEffect(() => {
+    checkAuthAndLoadData();
+  }, []);
+
+  useEffect(() => {
+    if (!loading && activeTab === "users") {
+      loadUsers();
+    }
+  }, [currentPage, activeTab]);
+
+  // Auto-refresh every 30 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (activeTab === "dashboard") {
+        loadData();
+      } else if (activeTab === "users") {
+        loadUsers();
+      }
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, [activeTab]);
+
+  const handleLogout = () => {
+    localStorage.removeItem("access_token"); // Changed from "token" to "access_token"
+    router.push("/admin/login");
+  };
+
+  const handleBanUser = async (userId: string) => {
+    try {
+      await api.banUser(userId);
+      await loadUsers();
+    } catch (error) {
+      console.error("Failed to ban user:", error);
+    }
+  };
+
+  const handleUnbanUser = async (userId: string) => {
+    try {
+      await api.unbanUser(userId);
+      await loadUsers();
+    } catch (error) {
+      console.error("Failed to unban user:", error);
     }
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-16 w-16 border-4 border-[#eb6a48] border-t-transparent" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      {/* Header */}
-      <div className="border-b border-border bg-card/50 backdrop-blur">
-        <div className="container mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Shield className="w-8 h-8 text-primary" />
-              <div>
-                <h1 className="text-2xl font-bold">Admin Dashboard</h1>
-                <p className="text-sm text-muted-foreground">Librarity System Management</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <Activity className="w-5 h-5 text-green-500" />
-              <span className="text-sm text-muted-foreground">System Online</span>
-            </div>
-          </div>
-        </div>
+    <div className="flex h-screen bg-gray-100 overflow-hidden">
+      {/* Fixed Sidebar */}
+      <div className="flex-shrink-0">
+        <Sidebar
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          currentUser={currentUser}
+          handleLogout={handleLogout}
+        />
       </div>
 
-      {/* Tabs */}
-      <div className="border-b border-border">
-        <div className="container mx-auto px-6">
-          <div className="flex gap-8">
-            {["overview", "users", "books"].map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab as any)}
-                className={`py-4 px-2 text-sm font-medium border-b-2 transition-colors ${
-                  activeTab === tab
-                    ? "border-primary text-primary"
-                    : "border-transparent text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                {tab.charAt(0).toUpperCase() + tab.slice(1)}
-              </button>
-            ))}
-          </div>
+      {/* Scrollable Main Content */}
+      <div className="flex-1 overflow-y-auto">
+        <div className="p-8">
+          {activeTab === "dashboard" && (
+            <DashboardTab overviewStats={overviewStats} growthData={growthData} />
+          )}
+
+          {activeTab === "users" && (
+            <UsersTab
+              users={users}
+              searchTerm={searchTerm}
+              setSearchTerm={setSearchTerm}
+              currentPage={currentPage}
+              setCurrentPage={setCurrentPage}
+              totalPages={totalPages}
+              handleBanUser={handleBanUser}
+              handleUnbanUser={handleUnbanUser}
+              onUserUpdated={loadUsers}
+            />
+          )}
+
+          {activeTab === "books" && <BooksTab />}
+          {activeTab === "analytics" && <AnalyticsTab />}
+          {activeTab === "revenue" && <RevenueTab />}
+          {activeTab === "metrics" && <MetricsTab />}
+          {activeTab === "content" && <ContentTab />}
+          {activeTab === "system" && <SystemHealthTab />}
+          {activeTab === "logs" && <LogsTab />}
+          {activeTab === "settings" && <SettingsTab />}
         </div>
-      </div>
-
-      {/* Content */}
-      <div className="container mx-auto px-6 py-8">
-        {activeTab === "overview" && stats && (
-          <div className="space-y-8">
-            {/* Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <StatCard
-                icon={<Users className="w-6 h-6" />}
-                title="Total Users"
-                value={stats.total_users}
-                subtitle={`${stats.active_users} active`}
-                color="blue"
-              />
-              <StatCard
-                icon={<BookOpen className="w-6 h-6" />}
-                title="Total Books"
-                value={stats.total_books}
-                subtitle="Uploaded"
-                color="purple"
-              />
-              <StatCard
-                icon={<MessageSquare className="w-6 h-6" />}
-                title="Total Chats"
-                value={stats.total_chats}
-                subtitle="Conversations"
-                color="green"
-              />
-              <StatCard
-                icon={<Coins className="w-6 h-6" />}
-                title="Tokens Used"
-                value={stats.total_tokens_used.toLocaleString()}
-                subtitle="Total consumption"
-                color="orange"
-              />
-            </div>
-
-            {/* Subscriptions */}
-            <div className="bg-card border border-border rounded-lg p-6">
-              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                <TrendingUp className="w-5 h-5" />
-                Subscriptions by Tier
-              </h3>
-              <div className="grid grid-cols-3 gap-4">
-                {Object.entries(stats.subscriptions_by_tier).map(([tier, count]) => (
-                  <div key={tier} className="bg-background/50 p-4 rounded-lg">
-                    <div className="text-2xl font-bold">{count}</div>
-                    <div className="text-sm text-muted-foreground capitalize">{tier}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {activeTab === "users" && (
-          <div className="space-y-4">
-            <div className="bg-card border border-border rounded-lg overflow-hidden">
-              <table className="w-full">
-                <thead className="bg-muted/50">
-                  <tr>
-                    <th className="px-4 py-3 text-left text-sm font-medium">User</th>
-                    <th className="px-4 py-3 text-left text-sm font-medium">Tier</th>
-                    <th className="px-4 py-3 text-left text-sm font-medium">Books</th>
-                    <th className="px-4 py-3 text-left text-sm font-medium">Chats</th>
-                    <th className="px-4 py-3 text-left text-sm font-medium">Tokens</th>
-                    <th className="px-4 py-3 text-left text-sm font-medium">Status</th>
-                    <th className="px-4 py-3 text-left text-sm font-medium">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border">
-                  {users.map((user) => (
-                    <tr key={user.id} className="hover:bg-muted/30">
-                      <td className="px-4 py-3">
-                        <div>
-                          <div className="font-medium">{user.email}</div>
-                          <div className="text-sm text-muted-foreground">{user.username}</div>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className="px-2 py-1 rounded text-xs font-medium bg-primary/10 text-primary">
-                          {user.subscription?.tier || "free"}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3">{user.total_books}</td>
-                      <td className="px-4 py-3">{user.total_chats}</td>
-                      <td className="px-4 py-3">
-                        {user.subscription && (
-                          <div className="text-xs">
-                            {user.subscription.tokens_used} / {user.subscription.token_limit}
-                          </div>
-                        )}
-                      </td>
-                      <td className="px-4 py-3">
-                        <span
-                          className={`px-2 py-1 rounded text-xs font-medium ${
-                            user.is_active
-                              ? "bg-green-500/10 text-green-500"
-                              : "bg-red-500/10 text-red-500"
-                          }`}
-                        >
-                          {user.is_active ? "Active" : "Banned"}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3">
-                        <button
-                          onClick={() => handleBanUser(user.id, user.is_active)}
-                          className="text-sm text-red-500 hover:text-red-400 flex items-center gap-1"
-                        >
-                          <Ban className="w-4 h-4" />
-                          {user.is_active ? "Ban" : "Unban"}
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
       </div>
     </div>
-  );
-}
-
-function StatCard({ icon, title, value, subtitle, color }: { 
-  icon: React.ReactNode; 
-  title: string; 
-  value: number | string; 
-  subtitle: string; 
-  color: "blue" | "purple" | "green" | "orange";
-}) {
-  const colorClasses = {
-    blue: "from-blue-500/10 to-blue-600/10 text-blue-500",
-    purple: "from-purple-500/10 to-purple-600/10 text-purple-500",
-    green: "from-green-500/10 to-green-600/10 text-green-500",
-    orange: "from-orange-500/10 to-orange-600/10 text-orange-500",
-  };
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className={`bg-gradient-to-br ${colorClasses[color]} rounded-lg p-6 border border-border`}
-    >
-      <div className="flex items-center justify-between mb-4">
-        <div className="p-2 bg-background/50 rounded-lg">{icon}</div>
-      </div>
-      <div className="space-y-1">
-        <div className="text-3xl font-bold">{value}</div>
-        <div className="text-sm text-muted-foreground">{title}</div>
-        <div className="text-xs text-muted-foreground">{subtitle}</div>
-      </div>
-    </motion.div>
   );
 }

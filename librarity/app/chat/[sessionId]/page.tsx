@@ -5,6 +5,8 @@ import { useParams, useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { motion } from "framer-motion";
 import { BookOpen, ArrowLeft, MessageCircle } from "lucide-react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 interface Message {
   type: "user" | "assistant";
@@ -177,7 +179,38 @@ export default function SharedChatPage() {
                     : "bg-white/[0.05] border border-white/[0.1] text-white/90"
                 }`}
               >
-                <p className="text-sm md:text-base whitespace-pre-wrap">{message.content}</p>
+                {message.type === "user" ? (
+                  <p className="text-sm md:text-base whitespace-pre-wrap">{message.content}</p>
+                ) : (
+                  <div className="text-sm md:text-base markdown-content">
+                    <ReactMarkdown
+                      remarkPlugins={[remarkGfm]}
+                      components={{
+                        p: ({ children }) => <p className="mb-3 last:mb-0">{children}</p>,
+                        strong: ({ children }) => <strong className="font-bold text-white">{children}</strong>,
+                        em: ({ children }) => <em className="italic text-white/80">{children}</em>,
+                        ul: ({ children }) => <ul className="list-disc list-inside mb-3 space-y-1">{children}</ul>,
+                        ol: ({ children }) => <ol className="list-decimal list-inside mb-3 space-y-1">{children}</ol>,
+                        li: ({ children }) => <li className="ml-2">{children}</li>,
+                        h1: ({ children }) => <h1 className="text-xl font-bold mb-2 text-white">{children}</h1>,
+                        h2: ({ children }) => <h2 className="text-lg font-bold mb-2 text-white">{children}</h2>,
+                        h3: ({ children }) => <h3 className="text-base font-bold mb-2 text-white">{children}</h3>,
+                        blockquote: ({ children }) => (
+                          <blockquote className="border-l-4 border-violet-500 pl-4 italic my-3 text-white/70">
+                            {children}
+                          </blockquote>
+                        ),
+                        code: ({ children }) => (
+                          <code className="bg-white/10 px-1.5 py-0.5 rounded text-violet-300 text-sm">
+                            {children}
+                          </code>
+                        ),
+                      }}
+                    >
+                      {message.content}
+                    </ReactMarkdown>
+                  </div>
+                )}
               </div>
             </motion.div>
           ))}

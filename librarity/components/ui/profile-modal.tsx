@@ -14,9 +14,13 @@ interface ProfileModalProps {
 export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
   const [user, setUser] = useState<any>(null);
   const [subscription, setSubscription] = useState<any>(null);
+  const [billingHistory, setBillingHistory] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [activeSection, setActiveSection] = useState<'account' | 'subscription' | 'promocode'>('account');
   const [showPricingPlans, setShowPricingPlans] = useState(false);
+  const [promoCode, setPromoCode] = useState('');
+  const [promoError, setPromoError] = useState('');
+  const [promoSuccess, setPromoSuccess] = useState('');
 
   useEffect(() => {
     if (isOpen) {
@@ -36,10 +40,56 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
       } catch (error) {
         console.error('Failed to load subscription:', error);
       }
+
+      try {
+        const billingData = await api.getBillingHistory();
+        setBillingHistory(billingData.payments || []);
+      } catch (error) {
+        console.error('Failed to load billing history:', error);
+      }
     } catch (error) {
       console.error('Failed to load user:', error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleApplyPromoCode = async () => {
+    if (!promoCode.trim()) {
+      setPromoError('Please enter a promo code');
+      return;
+    }
+
+    try {
+      setPromoError('');
+      setPromoSuccess('');
+      const result = await api.applyPromoCode(promoCode.toUpperCase());
+      setPromoSuccess(result.message);
+      setPromoCode('');
+      
+      // If upgraded, reload user data immediately
+      if (result.upgraded) {
+        setTimeout(() => {
+          loadUserData();
+        }, 500);
+      }
+    } catch (error: any) {
+      setPromoError(error.response?.data?.detail || 'Invalid promo code');
+    }
+  };
+
+  const handleUpgrade = async (tier: 'pro' | 'ultimate') => {
+    try {
+      const checkout = await api.createPolarCheckout(tier, 'monthly');
+      if (checkout.checkout_url) {
+        // Redirect to Polar checkout
+        window.location.href = checkout.checkout_url;
+      } else {
+        alert('Failed to create checkout session');
+      }
+    } catch (error: any) {
+      console.error('Failed to create checkout:', error);
+      alert(error.response?.data?.detail || 'Failed to create checkout session');
     }
   };
 
@@ -80,16 +130,16 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
           />
 
           {/* Modal Container */}
-          <div className="fixed inset-0 flex items-center justify-center p-0 sm:p-4 z-50 pointer-events-none">
+          <div className="fixed inset-0 flex items-center justify-center p-4 z-50">
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="flex flex-col md:flex-row w-full h-full md:h-[85vh] md:max-w-6xl bg-[#0a0a0b] md:rounded-3xl overflow-hidden shadow-2xl pointer-events-auto"
+              className="flex w-full max-w-6xl h-[85vh] bg-[#0a0a0b] rounded-3xl overflow-hidden shadow-2xl"
             >
               {/* Left Sidebar */}
-              <div className="hidden md:flex md:w-80 bg-[#18181b] flex-col flex-shrink-0">
+              <div className="w-80 bg-[#18181b] flex flex-col flex-shrink-0">
 
               {/* Sidebar Header */}
               <div className="p-6 space-y-6">
@@ -200,72 +250,17 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
             </div>
 
             {/* Right Content Area */}
-            <div className="flex-1 bg-[#0a0a0b] overflow-y-auto relative w-full">
-              <div className="max-w-4xl p-4 sm:p-6 md:p-8">
+            <div className="flex-1 bg-[#0a0a0b] overflow-y-auto relative">
+              <div className="max-w-4xl p-8">
                 {/* Close Button */}
                 <motion.button
                   onClick={onClose}
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
-                  className="absolute top-4 right-4 sm:top-6 sm:right-6 md:top-8 md:right-8 w-10 h-10 bg-[#27272a] hover:bg-[#3a3a3f] rounded-full flex items-center justify-center transition-colors z-10"
+                  className="absolute top-8 right-8 w-10 h-10 bg-[#27272a] hover:bg-[#3a3a3f] rounded-full flex items-center justify-center transition-colors"
                 >
-                  <X className="w-5 h-5 text-white" />
+                  <X className="w-5 h-5 text-gray-400" />
                 </motion.button>
-
-                {/* Mobile Navigation Tabs */}
-                <div className="md:hidden flex items-center gap-2 mb-6 overflow-x-auto pb-2">
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => setActiveSection('account')}
-                    className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium transition-colors whitespace-nowrap flex-shrink-0 ${
-                      activeSection === 'account'
-                        ? 'bg-[#eb6a48] text-white'
-                        : 'bg-[#27272a] text-gray-400 hover:text-white'
-                    }`}
-                  >
-                    <User className="w-4 h-4" />
-                    <span>Account</span>
-                  </motion.button>
-                  
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => setActiveSection('subscription')}
-                    className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium transition-colors whitespace-nowrap flex-shrink-0 ${
-                      activeSection === 'subscription'
-                        ? 'bg-[#eb6a48] text-white'
-                        : 'bg-[#27272a] text-gray-400 hover:text-white'
-                    }`}
-                  >
-                    <Crown className="w-4 h-4" />
-                    <span>Subscription</span>
-                  </motion.button>
-                  
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => setActiveSection('promocode')}
-                    className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium transition-colors whitespace-nowrap flex-shrink-0 ${
-                      activeSection === 'promocode'
-                        ? 'bg-[#eb6a48] text-white'
-                        : 'bg-[#27272a] text-gray-400 hover:text-white'
-                    }`}
-                  >
-                    <Settings className="w-4 h-4" />
-                    <span>Promocode</span>
-                  </motion.button>
-                  
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={handleLogout}
-                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium transition-colors whitespace-nowrap flex-shrink-0 bg-[#27272a] text-gray-400 hover:text-white"
-                  >
-                    <LogOut className="w-4 h-4" />
-                    <span>Log out</span>
-                  </motion.button>
-                </div>
 
                 {isLoading ? (
                   <div className="flex items-center justify-center py-20">
@@ -275,43 +270,33 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                   <>
                     {/* Account Section */}
                     {activeSection === 'account' && (
-                      <div className="space-y-4 md:space-y-8">
+                      <div className="space-y-8">
                         {/* Header with Avatar */}
-                        <div className="bg-[#27272a] rounded-2xl md:rounded-3xl p-4 md:p-8">
-                          <div className="flex flex-col sm:flex-row items-center sm:justify-between gap-4">
-                            <div className="flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left">
-                              <div className="w-16 h-16 md:w-20 md:h-20 bg-gradient-to-br from-yellow-200 to-lime-300 rounded-full flex items-center justify-center flex-shrink-0">
-                                <span className="text-2xl md:text-3xl font-bold text-gray-800">
-                                  {getUserInitial()}
-                                </span>
-                              </div>
-                              <div>
-                                <h2 className="text-xl md:text-2xl font-bold text-white">
-                                  {user?.username || user?.email?.split('@')[0] || 'User'}
-                                </h2>
-                                <p className="text-sm md:text-base text-gray-400 break-all">
-                                  {user?.email}
-                                </p>
-                              </div>
+                        <div className="bg-[#27272a] rounded-3xl p-8">
+                          <div className="flex items-center gap-4">
+                            <div className="w-20 h-20 bg-gradient-to-br from-yellow-200 to-lime-300 rounded-full flex items-center justify-center">
+                              <span className="text-3xl font-bold text-gray-800">
+                                {getUserInitial()}
+                              </span>
                             </div>
-                            <motion.button
-                              whileHover={{ scale: 1.05 }}
-                              whileTap={{ scale: 0.95 }}
-                              className="flex items-center gap-2 px-4 md:px-6 py-2.5 md:py-3 bg-[#eb6a48] hover:bg-[#d85a38] rounded-xl text-white font-medium transition-colors text-sm md:text-base whitespace-nowrap"
-                            >
-                              <Settings className="w-4 h-4 md:w-5 md:h-5" />
-                              Edit profile
-                            </motion.button>
+                            <div>
+                              <h2 className="text-2xl font-bold text-white">
+                                {user?.username || user?.email?.split('@')[0] || 'User'}
+                              </h2>
+                              <p className="text-gray-400">
+                                {user?.email}
+                              </p>
+                            </div>
                           </div>
                         </div>
 
                         {/* Account Details */}
-                        <div className="bg-[#27272a] rounded-2xl md:rounded-3xl p-4 md:p-8">
-                          <h3 className="text-xl md:text-2xl font-bold text-white mb-4 md:mb-6">Account details</h3>
-                          <div className="space-y-4 md:space-y-6">
+                        <div className="bg-[#27272a] rounded-3xl p-8">
+                          <h3 className="text-2xl font-bold text-white mb-6">Account details</h3>
+                          <div className="space-y-6">
                             <div>
-                              <label className="text-xs md:text-sm text-gray-500 mb-2 block">Username</label>
-                              <p className="text-base md:text-lg text-white">{user?.username || 'radiating_rainbow_super'}</p>
+                              <label className="text-sm text-gray-500 mb-2 block">Username</label>
+                              <p className="text-lg text-white">{user?.username || user?.email?.split('@')[0] || 'Not set'}</p>
                             </div>
                             <div>
                               <label className="text-sm text-gray-500 mb-2 block">Email</label>
@@ -322,17 +307,17 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
 
                         {/* Subscription Section */}
                         {subscription && (
-                          <div className="bg-[#27272a] rounded-2xl md:rounded-3xl p-4 md:p-8">
-                            <h3 className="text-xl md:text-2xl font-bold text-white mb-4 md:mb-6">Subscription</h3>
-                            <div className="bg-gradient-to-br from-[#eb6a48] to-[#d85a38] rounded-xl md:rounded-2xl p-4 md:p-6">
-                              <div className="flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-3">
+                          <div className="bg-[#27272a] rounded-3xl p-8">
+                            <h3 className="text-2xl font-bold text-white mb-6">Subscription</h3>
+                            <div className="bg-gradient-to-br from-[#eb6a48] to-[#d85a38] rounded-2xl p-6">
+                              <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-3">
-                                  <div className="w-10 h-10 md:w-12 md:h-12 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
-                                    <Crown className="w-5 h-5 md:w-6 md:h-6 text-white" />
+                                  <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+                                    <Crown className="w-6 h-6 text-white" />
                                   </div>
                                   <div>
-                                    <p className="text-white font-semibold text-lg md:text-xl">{getSubscriptionTier()} Plan</p>
-                                    <p className="text-white/80 text-xs md:text-sm">
+                                    <p className="text-white font-semibold text-xl">{getSubscriptionTier()} Plan</p>
+                                    <p className="text-white/80 text-sm">
                                       {subscription?.tier === 'free' 
                                         ? 'Upgrade to unlock more features' 
                                         : 'You have full access'}
@@ -344,7 +329,7 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                                     whileHover={{ scale: 1.05 }}
                                     whileTap={{ scale: 0.95 }}
                                     onClick={() => window.location.href = '/pricing'}
-                                    className="px-4 md:px-6 py-2.5 md:py-3 bg-white text-[#eb6a48] font-semibold rounded-xl hover:bg-white/90 transition-colors text-sm md:text-base whitespace-nowrap"
+                                    className="px-6 py-3 bg-white text-[#eb6a48] font-semibold rounded-xl hover:bg-white/90 transition-colors"
                                   >
                                     Upgrade
                                   </motion.button>
@@ -364,12 +349,22 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                         <div className="w-full max-w-md space-y-4">
                           <input
                             type="text"
+                            value={promoCode}
+                            onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
                             placeholder="Enter your promo code"
-                            className="w-full px-6 py-4 bg-[#27272a] border-2 border-gray-800 rounded-2xl text-white placeholder-gray-500 focus:outline-none focus:border-[#eb6a48] transition-colors text-lg"
+                            className="w-full px-6 py-4 bg-[#27272a] border-2 border-gray-800 rounded-2xl text-white placeholder-gray-500 focus:outline-none focus:border-[#eb6a48] transition-colors text-lg uppercase"
+                            onKeyPress={(e) => e.key === 'Enter' && handleApplyPromoCode()}
                           />
+                          {promoError && (
+                            <p className="text-red-400 text-sm text-center">{promoError}</p>
+                          )}
+                          {promoSuccess && (
+                            <p className="text-green-400 text-sm text-center">{promoSuccess}</p>
+                          )}
                           <motion.button
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
+                            onClick={handleApplyPromoCode}
                             className="w-full px-6 py-4 bg-[#eb6a48] text-white font-semibold rounded-2xl hover:bg-[#d85a38] transition-colors text-lg"
                           >
                             Apply Code
@@ -439,21 +434,21 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                             </div>
 
                             {/* Pricing Cards */}
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                               {/* Free Plan */}
                               <motion.div
                                 whileHover={{ scale: 1.02 }}
-                                className="bg-[#27272a] rounded-2xl md:rounded-3xl p-4 md:p-6 border-2 border-gray-800"
+                                className="bg-[#27272a] rounded-3xl p-6 border-2 border-gray-800"
                               >
-                                <div className="mb-4 md:mb-6">
-                                  <h3 className="text-xl md:text-2xl font-bold text-white mb-2">Free</h3>
+                                <div className="mb-6">
+                                  <h3 className="text-2xl font-bold text-white mb-2">Free</h3>
                                   <div className="flex items-baseline gap-2">
-                                    <span className="text-3xl md:text-4xl font-bold text-white">$0</span>
+                                    <span className="text-4xl font-bold text-white">$0</span>
                                     <span className="text-gray-400">/month</span>
                                   </div>
                                 </div>
 
-                                <ul className="space-y-2 md:space-y-3 mb-4 md:mb-6">
+                                <ul className="space-y-3 mb-6">
                                   <li className="flex items-center gap-2 text-gray-300">
                                     <svg className="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
                                       <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
@@ -491,7 +486,7 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                                   whileTap={{ scale: 0.98 }}
                                   disabled={subscription?.tier === 'free'}
                                   className={cn(
-                                    "w-full py-2.5 md:py-3 rounded-xl font-semibold transition-colors text-sm md:text-base",
+                                    "w-full py-3 rounded-xl font-semibold transition-colors",
                                     subscription?.tier === 'free'
                                       ? "bg-gray-700 text-gray-400 cursor-not-allowed"
                                       : "bg-gray-700 text-white hover:bg-gray-600"
@@ -504,23 +499,23 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                               {/* Pro Plan */}
                               <motion.div
                                 whileHover={{ scale: 1.02 }}
-                                className="bg-[#27272a] rounded-2xl md:rounded-3xl p-4 md:p-6 border-2 border-[#eb6a48] relative"
+                                className="bg-[#27272a] rounded-3xl p-6 border-2 border-[#eb6a48] relative"
                               >
                                 <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                                  <span className="bg-[#eb6a48] text-white px-3 md:px-4 py-1 rounded-full text-xs md:text-sm font-semibold">
+                                  <span className="bg-[#eb6a48] text-white px-4 py-1 rounded-full text-sm font-semibold">
                                     Popular
                                   </span>
                                 </div>
 
-                                <div className="mb-4 md:mb-6 mt-2">
-                                  <h3 className="text-xl md:text-2xl font-bold text-white mb-2">Pro</h3>
+                                <div className="mb-6 mt-2">
+                                  <h3 className="text-2xl font-bold text-white mb-2">Pro</h3>
                                   <div className="flex items-baseline gap-2">
-                                    <span className="text-3xl md:text-4xl font-bold text-white">$10</span>
+                                    <span className="text-4xl font-bold text-white">$10</span>
                                     <span className="text-gray-400">/month</span>
                                   </div>
                                 </div>
 
-                                <ul className="space-y-2 md:space-y-3 mb-4 md:mb-6">
+                                <ul className="space-y-3 mb-6">
                                   <li className="flex items-center gap-2 text-gray-300">
                                     <svg className="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
                                       <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
@@ -557,8 +552,9 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                                   whileHover={{ scale: 1.02 }}
                                   whileTap={{ scale: 0.98 }}
                                   disabled={subscription?.tier === 'pro'}
+                                  onClick={() => subscription?.tier !== 'pro' && handleUpgrade('pro')}
                                   className={cn(
-                                    "w-full py-2.5 md:py-3 rounded-xl font-semibold transition-colors text-sm md:text-base",
+                                    "w-full py-3 rounded-xl font-semibold transition-colors",
                                     subscription?.tier === 'pro'
                                       ? "bg-gray-700 text-gray-400 cursor-not-allowed"
                                       : "bg-[#eb6a48] text-white hover:bg-[#d85a38]"
@@ -571,17 +567,17 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                               {/* Ultimate Plan */}
                               <motion.div
                                 whileHover={{ scale: 1.02 }}
-                                className="bg-gradient-to-br from-[#27272a] to-[#1a1a1c] rounded-2xl md:rounded-3xl p-4 md:p-6 border-2 border-purple-600"
+                                className="bg-gradient-to-br from-[#27272a] to-[#1a1a1c] rounded-3xl p-6 border-2 border-purple-600"
                               >
-                                <div className="mb-4 md:mb-6">
-                                  <h3 className="text-xl md:text-2xl font-bold text-white mb-2">Ultimate</h3>
+                                <div className="mb-6">
+                                  <h3 className="text-2xl font-bold text-white mb-2">Ultimate</h3>
                                   <div className="flex items-baseline gap-2">
-                                    <span className="text-3xl md:text-4xl font-bold text-white">$25</span>
+                                    <span className="text-4xl font-bold text-white">$25</span>
                                     <span className="text-gray-400">/month</span>
                                   </div>
                                 </div>
 
-                                <ul className="space-y-2 md:space-y-3 mb-4 md:mb-6">
+                                <ul className="space-y-3 mb-6">
                                   <li className="flex items-center gap-2 text-gray-300">
                                     <svg className="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
                                       <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
@@ -618,8 +614,9 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                                   whileHover={{ scale: 1.02 }}
                                   whileTap={{ scale: 0.98 }}
                                   disabled={subscription?.tier === 'ultimate'}
+                                  onClick={() => subscription?.tier !== 'ultimate' && handleUpgrade('ultimate')}
                                   className={cn(
-                                    "w-full py-2.5 md:py-3 rounded-xl font-semibold transition-colors text-sm md:text-base",
+                                    "w-full py-3 rounded-xl font-semibold transition-colors",
                                     subscription?.tier === 'ultimate'
                                       ? "bg-gray-700 text-gray-400 cursor-not-allowed"
                                       : "bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-500 hover:to-pink-500"
@@ -684,11 +681,64 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                                     </tr>
                                   </thead>
                                   <tbody>
-                                    <tr>
-                                      <td colSpan={5} className="text-center py-12 text-gray-500">
-                                        No billing history available
-                                      </td>
-                                    </tr>
+                                    {billingHistory.length > 0 ? (
+                                      billingHistory.map((payment) => (
+                                        <tr key={payment.id} className="border-b border-gray-800">
+                                          <td className="py-3 px-4 text-gray-300">
+                                            {new Date(payment.date).toLocaleDateString('en-US', { 
+                                              year: 'numeric', 
+                                              month: 'short', 
+                                              day: 'numeric' 
+                                            })}
+                                          </td>
+                                          <td className="py-3 px-4 text-white font-semibold">
+                                            {payment.amount}
+                                          </td>
+                                          <td className="py-3 px-4">
+                                            <span className={cn(
+                                              "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium",
+                                              payment.status === 'completed' && "bg-green-100 text-green-800",
+                                              payment.status === 'pending' && "bg-yellow-100 text-yellow-800",
+                                              payment.status === 'failed' && "bg-red-100 text-red-800",
+                                              payment.status === 'refunded' && "bg-gray-100 text-gray-800"
+                                            )}>
+                                              {payment.status}
+                                            </span>
+                                          </td>
+                                          <td className="py-3 px-4">
+                                            {payment.invoice_url ? (
+                                              <a 
+                                                href={payment.invoice_url} 
+                                                target="_blank" 
+                                                rel="noopener noreferrer"
+                                                className="text-[#eb6a48] hover:text-[#d85a38] transition-colors"
+                                              >
+                                                View
+                                              </a>
+                                            ) : (
+                                              <span className="text-gray-600">N/A</span>
+                                            )}
+                                          </td>
+                                          <td className="py-3 px-4">
+                                            {payment.invoice_url && (
+                                              <a 
+                                                href={payment.invoice_url} 
+                                                download
+                                                className="text-gray-400 hover:text-white transition-colors text-sm"
+                                              >
+                                                Download
+                                              </a>
+                                            )}
+                                          </td>
+                                        </tr>
+                                      ))
+                                    ) : (
+                                      <tr>
+                                        <td colSpan={5} className="text-center py-12 text-gray-500">
+                                          No billing history available
+                                        </td>
+                                      </tr>
+                                    )}
                                   </tbody>
                                 </table>
                               </div>

@@ -1117,10 +1117,10 @@ export function AnimatedAIChat({ onUploadClick, uploadedBook, onRemoveBook, curr
             </Dialog>
 
             {/* Mobile Version - новый дизайн с белым фоном и темной шапкой */}
-            <div className="md:hidden h-screen flex flex-col w-full bg-white text-black overflow-hidden">
+            <div className="md:hidden min-h-screen flex flex-col w-full items-center justify-start bg-white text-black relative overflow-hidden">
                 {/* Header - темная шапка */}
                 <motion.div 
-                    className="flex-shrink-0 w-full bg-[#24252d] h-[60px] px-4 flex items-center justify-between"
+                    className="w-[calc(100%-24px)] bg-[#24252d] h-[59px] px-4 flex items-center justify-between relative z-50 rounded-[23px] mt-3"
                     initial={{ opacity: 0, y: -20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.1 }}
@@ -1130,9 +1130,9 @@ export function AnimatedAIChat({ onUploadClick, uploadedBook, onRemoveBook, curr
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                         onClick={onToggleSidebar}
-                        className="w-10 h-10 flex items-center justify-center"
+                        className="w-8 h-8 flex items-center justify-center"
                     >
-                        <svg width="24" height="24" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path d="M8 9.33333H24M8 16H24M8 22.6667H24" stroke="#EB6A48" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                         </svg>
                     </motion.button>
@@ -1144,7 +1144,7 @@ export function AnimatedAIChat({ onUploadClick, uploadedBook, onRemoveBook, curr
                                 <motion.button
                                     whileHover={{ scale: 1.05 }}
                                     whileTap={{ scale: 0.95 }}
-                                    className="px-5 py-1.5 bg-white hover:bg-gray-100 rounded-xl transition-colors text-black font-semibold text-sm"
+                                    className="px-6 py-2 bg-white hover:bg-gray-100 rounded-[17px] transition-colors text-black font-semibold text-base"
                                 >
                                     Login
                                 </motion.button>
@@ -1160,100 +1160,98 @@ export function AnimatedAIChat({ onUploadClick, uploadedBook, onRemoveBook, curr
                     )}
                 </motion.div>
 
-                {/* Mobile Content - с приветственным сообщением или чатом */}
-                <div className="flex-1 w-full overflow-y-auto">
+                {/* Mobile Content - с приветственным сообщением */}
+                <div className="flex-1 w-full flex items-center justify-center p-4">
                     {!uploadedBook ? (
-                        <div className="h-full flex items-center justify-center p-4">
-                            <motion.div
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.2, duration: 0.5 }}
-                                className="w-full max-w-md text-center space-y-5"
-                            >
-                                {/* Welcome Message */}
-                                <div className="space-y-2.5">
-                                    <motion.h1 
-                                        className="text-2xl font-bold text-black"
-                                        initial={{ opacity: 0, y: 20 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        transition={{ delay: 0.3, duration: 0.6 }}
-                                    >
-                                        Welcome to Librarity! 📚
-                                    </motion.h1>
-                                    <motion.p 
-                                        className="text-sm text-black/60"
-                                        initial={{ opacity: 0, y: 20 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        transition={{ delay: 0.4, duration: 0.6 }}
-                                    >
-                                        Upload your book and start a conversation with it. 
-                                        Ask questions, get summaries, and explore ideas together!
-                                    </motion.p>
-                                </div>
+                        <motion.div
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.2, duration: 0.5 }}
+                            className="w-full max-w-md text-center space-y-5"
+                        >
+                            {/* Welcome Message */}
+                            <div className="space-y-2.5">
+                                <motion.h1 
+                                    className="text-2xl font-bold text-black"
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: 0.3, duration: 0.6 }}
+                                >
+                                    Welcome to Librarity! 📚
+                                </motion.h1>
+                                <motion.p 
+                                    className="text-sm text-black/60"
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: 0.4, duration: 0.6 }}
+                                >
+                                    Upload your book and start a conversation with it. 
+                                    Ask questions, get summaries, and explore ideas together!
+                                </motion.p>
+                            </div>
 
-                                {/* Hidden File Input */}
-                                <input
-                                    ref={fileInputRef}
-                                    type="file"
-                                    accept=".pdf,.epub"
-                                    onChange={handleFileSelect}
-                                    className="hidden"
-                                />
+                            {/* Hidden File Input */}
+                            <input
+                                ref={fileInputRef}
+                                type="file"
+                                accept=".pdf,.epub"
+                                onChange={handleFileSelect}
+                                className="hidden"
+                            />
 
-                                {/* Upload Button or Progress */}
-                                {!isUploading ? (
-                                    <motion.button
-                                        onClick={handleAttachFile}
-                                        whileHover={{ scale: 1.02 }}
-                                        whileTap={{ scale: 0.98 }}
-                                        initial={{ opacity: 0, y: 20 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        transition={{ delay: 0.5, duration: 0.6 }}
-                                        className="w-full flex flex-col items-center gap-3 px-6 py-10 border-2 border-dashed border-black/20 hover:border-[#eb6a48]/50 rounded-2xl transition-all bg-[#f7f7f7]"
-                                    >
-                                        <div className="w-12 h-12">
-                                            <Upload className="w-full h-full text-[#eb6a48]" />
-                                        </div>
-                                        <p className="text-sm text-black/55 font-medium text-center">
-                                            Upload book in PDF or Epub format
-                                        </p>
-                                    </motion.button>
-                                ) : (
-                                    <motion.div
-                                        initial={{ opacity: 0, y: 20 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        transition={{ duration: 0.3 }}
-                                        className="w-full flex flex-col items-center gap-3 px-6 py-10 border-2 border-dashed border-[#eb6a48]/50 rounded-2xl bg-[#f7f7f7]"
-                                    >
-                                        <div className="w-full space-y-4">
-                                            {/* Progress Bar */}
-                                            <div className="space-y-2">
-                                                <div className="flex justify-between text-sm">
-                                                    <span className="text-black/70 font-medium">{uploadStatus}</span>
-                                                    <span className="text-[#eb6a48] font-semibold">{uploadProgress}%</span>
-                                                </div>
-                                                <div className="w-full h-2 bg-black/10 rounded-full overflow-hidden">
-                                                    <motion.div
-                                                        className="h-full bg-[#eb6a48]"
-                                                        initial={{ width: 0 }}
-                                                        animate={{ width: `${uploadProgress}%` }}
-                                                        transition={{ duration: 0.3 }}
-                                                    />
-                                                </div>
+                            {/* Upload Button or Progress */}
+                            {!isUploading ? (
+                                <motion.button
+                                    onClick={handleAttachFile}
+                                    whileHover={{ scale: 1.02 }}
+                                    whileTap={{ scale: 0.98 }}
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: 0.5, duration: 0.6 }}
+                                    className="w-full flex flex-col items-center gap-3 px-6 py-10 border-2 border-dashed border-black/20 hover:border-[#eb6a48]/50 rounded-2xl transition-all bg-[#f7f7f7]"
+                                >
+                                    <div className="w-12 h-12">
+                                        <Upload className="w-full h-full text-[#eb6a48]" />
+                                    </div>
+                                    <p className="text-sm text-black/55 font-medium text-center">
+                                        Upload book in PDF or Epub format
+                                    </p>
+                                </motion.button>
+                            ) : (
+                                <motion.div
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ duration: 0.3 }}
+                                    className="w-full flex flex-col items-center gap-3 px-6 py-10 border-2 border-dashed border-[#eb6a48]/50 rounded-2xl bg-[#f7f7f7]"
+                                >
+                                    <div className="w-full space-y-4">
+                                        {/* Progress Bar */}
+                                        <div className="space-y-2">
+                                            <div className="flex justify-between text-sm">
+                                                <span className="text-black/70 font-medium">{uploadStatus}</span>
+                                                <span className="text-[#eb6a48] font-semibold">{uploadProgress}%</span>
                                             </div>
-                                            
-                                            {/* Loading Icon */}
-                                            <div className="flex justify-center">
-                                                <LoaderIcon className="w-8 h-8 text-[#eb6a48] animate-spin" />
+                                            <div className="w-full h-2 bg-black/10 rounded-full overflow-hidden">
+                                                <motion.div
+                                                    className="h-full bg-[#eb6a48]"
+                                                    initial={{ width: 0 }}
+                                                    animate={{ width: `${uploadProgress}%` }}
+                                                    transition={{ duration: 0.3 }}
+                                                />
                                             </div>
                                         </div>
-                                    </motion.div>
-                                )}
-                            </motion.div>
-                        </div>
+                                        
+                                        {/* Loading Icon */}
+                                        <div className="flex justify-center">
+                                            <LoaderIcon className="w-8 h-8 text-[#eb6a48] animate-spin" />
+                                        </div>
+                                    </div>
+                                </motion.div>
+                            )}
+                        </motion.div>
                     ) : (
                         // Когда книга загружена - показываем чат
-                        <div className="h-full px-3 py-4 space-y-3">
+                        <div className="w-full h-full flex flex-col px-4 py-4 space-y-4 overflow-y-auto">
                             {messages.map((message, index) => {
                                 const isUserMessage = message.role === 'user';
                                 const isAssistantMessage = message.role === 'assistant';
@@ -1264,16 +1262,16 @@ export function AnimatedAIChat({ onUploadClick, uploadedBook, onRemoveBook, curr
                                     initial={{ opacity: 0, y: 10 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     transition={{ delay: index * 0.05 }}
-                                    className="flex w-full"
+                                    className="flex gap-2 w-full"
                                     style={{
                                         justifyContent: isUserMessage ? 'flex-end' : 'flex-start'
                                     }}
                                 >
                                     {/* Message bubble */}
-                                    <div className="flex flex-col gap-2 max-w-[85%]">
+                                    <div className="flex flex-col gap-2 max-w-[80%]">
                                         {/* Бейдж книги для AI ответов (сверху) */}
                                         {isAssistantMessage && uploadedBook && (
-                                            <div className="flex items-center gap-2 px-3 py-1.5 bg-[#eb6a48] rounded-xl w-fit">
+                                            <div className="flex items-center gap-2 px-3 py-2 bg-[#eb6a48] rounded-2xl w-fit">
                                                 <div className="w-6 h-6 rounded-lg bg-white flex items-center justify-center flex-shrink-0">
                                                     <svg width="27" height="27" viewBox="0 0 27 27" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-4 h-4">
                                                         <path d="M16.875 6.75V10.125C16.875 10.6223 17.0725 11.0992 17.4242 11.4508C17.7758 11.8025 18.2527 12 18.75 12H22.125" stroke="#EB6A48" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -1295,13 +1293,13 @@ export function AnimatedAIChat({ onUploadClick, uploadedBook, onRemoveBook, curr
                                         
                                         <div
                                             className={cn(
-                                                "px-3 py-2.5 rounded-xl break-words",
+                                                "px-3 py-2.5 rounded-2xl",
                                                 isUserMessage
                                                     ? 'bg-[#eb6a48] text-white rounded-br-md'
                                                     : 'bg-[#f7f7f7] text-black rounded-bl-md'
                                             )}
                                         >
-                                            <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">{message.content}</p>
+                                            <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
                                         </div>
                                         
                                         {/* Share button for assistant messages */}
@@ -1347,10 +1345,10 @@ export function AnimatedAIChat({ onUploadClick, uploadedBook, onRemoveBook, curr
 
                 {/* Mobile Bottom Input - показывается всегда после входа */}
                 {isAuthenticated && (
-                    <div className="flex-shrink-0 w-full p-3 bg-white border-t border-black/5 space-y-2">
+                    <div className="w-full p-4 space-y-2.5">
                         {/* Mode Selector for Mobile */}
                         {uploadedBook && (
-                            <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide -mx-1 px-1">
+                            <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide pb-1">
                                 {chatModes.map((mode) => (
                                     <motion.button
                                         key={mode.value}
@@ -1358,11 +1356,12 @@ export function AnimatedAIChat({ onUploadClick, uploadedBook, onRemoveBook, curr
                                         whileHover={{ scale: 1.02 }}
                                         whileTap={{ scale: 0.98 }}
                                         className={cn(
-                                            "flex items-center gap-1.5 px-2.5 py-1.5 rounded-full transition-all whitespace-nowrap text-xs font-medium flex-shrink-0",
+                                            "flex items-center gap-1.5 px-2.5 py-1.5 rounded-full transition-all whitespace-nowrap text-xs font-medium",
                                             chatMode === mode.value
                                                 ? "bg-[#eb6a48] text-white shadow-sm"
-                                                : "bg-gray-100 text-black/60 border border-black/10"
+                                                : "bg-white text-black/60 border border-black/10"
                                         )}
+                                        title={mode.description}
                                     >
                                         {mode.icon}
                                         <span>{mode.label}</span>
@@ -1371,12 +1370,12 @@ export function AnimatedAIChat({ onUploadClick, uploadedBook, onRemoveBook, curr
                             </div>
                         )}
                         
-                        <div className="relative bg-[#f7f7f7] border border-black/10 rounded-2xl px-3 py-2.5 flex items-center gap-2">
+                        <div className="relative bg-[#f7f7f7] border border-black/20 rounded-[23px] px-4 py-3 flex items-center gap-2">
                             <motion.button
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
                                 onClick={handleAttachFile}
-                                className="w-8 h-8 bg-[#eb6a48] rounded-full flex items-center justify-center flex-shrink-0"
+                                className="w-[30px] h-[30px] bg-[#eb6a48] rounded-full flex items-center justify-center"
                             >
                                 <PlusIcon className="w-4 h-4 text-white" />
                             </motion.button>
@@ -1392,19 +1391,19 @@ export function AnimatedAIChat({ onUploadClick, uploadedBook, onRemoveBook, curr
                                 }}
                                 placeholder={uploadedBook ? "Ask from book ....." : "Upload a book first"}
                                 disabled={!uploadedBook}
-                                className="flex-1 bg-transparent text-sm text-black placeholder:text-black/40 outline-none disabled:opacity-50"
+                                className="flex-1 bg-transparent text-base text-black/40 outline-none disabled:opacity-50"
                             />
                             <motion.button
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
                                 onClick={handleSendMessage}
                                 disabled={!uploadedBook || !value.trim()}
-                                className="w-9 h-9 bg-[#eb6a48] rounded-full flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
+                                className="w-[41px] h-[41px] bg-[#eb6a48] rounded-full flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                                <SendIcon className="w-4 h-4 text-white" />
+                                <SendIcon className="w-5 h-5 text-white" />
                             </motion.button>
                         </div>
-                        <p className="text-center text-[10px] text-black/50 -mt-0.5">
+                        <p className="text-center text-[11px] text-black mt-1.5">
                             Librarity might make mistakes
                         </p>
                     </div>
