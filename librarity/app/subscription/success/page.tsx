@@ -1,12 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle, Loader2, XCircle, Sparkles, Crown, BookOpen, Zap } from 'lucide-react';
 import api from '@/lib/api';
 
-export default function SubscriptionSuccess() {
+function SubscriptionSuccessContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
@@ -251,5 +251,21 @@ export default function SubscriptionSuccess() {
         )}
       </AnimatePresence>
     </div>
+  );
+}
+
+export default function SubscriptionSuccess() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-pink-50 via-white to-purple-50 flex items-center justify-center p-4">
+        <div className="bg-white rounded-3xl shadow-2xl p-8 max-w-md w-full text-center">
+          <Loader2 className="w-16 h-16 text-pink-500 animate-spin mx-auto mb-6" />
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Загрузка...</h1>
+          <p className="text-gray-600">Проверяем вашу подписку...</p>
+        </div>
+      </div>
+    }>
+      <SubscriptionSuccessContent />
+    </Suspense>
   );
 }

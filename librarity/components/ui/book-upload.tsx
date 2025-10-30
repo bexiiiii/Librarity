@@ -94,7 +94,7 @@ export function BookUpload({ onUploadSuccess, onClose }: BookUploadProps) {
         title: title || undefined,
         author: author || undefined,
         description: description || undefined,
-      });
+      }) as { id: string; title: string; author?: string; description?: string };
 
       clearInterval(progressInterval);
       setUploadProgress(100);

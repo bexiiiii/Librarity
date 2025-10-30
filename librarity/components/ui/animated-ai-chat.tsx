@@ -608,7 +608,7 @@ export function AnimatedAIChat({ onUploadClick, uploadedBook, onRemoveBook, curr
                 });
             }, 200);
 
-            const response = await api.uploadBook(file);
+            const response = await api.uploadBook(file) as { id: string; title: string; author?: string };
             
             console.log('API response:', response);
             console.log('response.id:', response.id);

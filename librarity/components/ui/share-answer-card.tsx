@@ -209,7 +209,7 @@ export function ShareAnswerCard({
               </motion.button>
 
               {/* Share (Native) */}
-              {navigator.share && (
+              {typeof window !== 'undefined' && 'share' in navigator && (
                 <motion.button
                   onClick={() => handleShare('native')}
                   disabled={isGenerating}

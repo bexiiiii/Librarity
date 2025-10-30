@@ -77,7 +77,7 @@ const CardDemo = ({ onSuccess }: CardDemoProps) => {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleAuthSubmit}>
           <div className='flex flex-col gap-6'>
             {error && (
               <div className='p-3 text-sm text-red-500 bg-red-50 dark:bg-red-950/30 rounded-lg border border-red-200 dark:border-red-900'>

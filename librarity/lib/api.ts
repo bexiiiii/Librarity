@@ -232,14 +232,6 @@ class APIClient {
     return this.request(`/admin/users/${userId}`, { method: 'DELETE' });
   }
 
-  async banUser(userId: string) {
-    return this.request(`/admin/users/${userId}/ban`, { method: 'PATCH' });
-  }
-
-  async unbanUser(userId: string) {
-    return this.request(`/admin/users/${userId}/unban`, { method: 'PATCH' });
-  }
-
   async getAllBooks(page = 1, pageSize = 50) {
     return this.request(`/admin/books?page=${page}&page_size=${pageSize}`);
   }
@@ -417,93 +409,6 @@ class APIClient {
 
   async getTokenUsageTimeline(days = 30) {
     return this.request(`/admin/analytics/token-usage/timeline?days=${days}`);
-  }
-
-  // Admin - Books Management
-  async getAdminBooks(page = 1, limit = 10, filters?: any) {
-    const params = new URLSearchParams({
-      page: page.toString(),
-      limit: limit.toString(),
-      ...(filters || {})
-    });
-    return this.request(`/admin/books?${params}`);
-  }
-
-  async updateBookStatus(bookId: string, status: string) {
-    return this.request(`/admin/books/${bookId}/status`, {
-      method: 'PUT',
-      body: JSON.stringify({ status }),
-    });
-  }
-
-  async deleteBook(bookId: string) {
-    return this.request(`/admin/books/${bookId}`, {
-      method: 'DELETE',
-    });
-  }
-
-  // Admin - Analytics
-  async getBookAnalytics(days = 30) {
-    return this.request(`/admin/analytics/books?days=${days}`);
-  }
-
-  async getStartupMetrics(days = 30) {
-    return this.request(`/admin/analytics/metrics?days=${days}`);
-  }
-
-  // Admin - Revenue/Payments
-  async getPaymentHistory(page = 1, limit = 20) {
-    return this.request(`/admin/payments?page=${page}&limit=${limit}`);
-  }
-
-  async getRevenueStats(days = 30) {
-    return this.request(`/admin/revenue/stats?days=${days}`);
-  }
-
-  // Admin - Shared Content
-  async getSharedContent(page = 1, limit = 20) {
-    return this.request(`/admin/shared-content?page=${page}&limit=${limit}`);
-  }
-
-  async deleteSharedContent(contentId: string) {
-    return this.request(`/admin/shared-content/${contentId}`, {
-      method: 'DELETE',
-    });
-  }
-
-  // Admin - System Logs
-  async getSystemLogs(page = 1, limit = 50, level?: string) {
-    const params = new URLSearchParams({
-      page: page.toString(),
-      limit: limit.toString(),
-      ...(level ? { level } : {})
-    });
-    return this.request(`/admin/logs?${params}`);
-  }
-
-  // Admin - Promo Codes
-  async getPromoCodes() {
-    return this.request('/admin/promo-codes');
-  }
-
-  async createPromoCode(data: any) {
-    return this.request('/admin/promo-codes', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    });
-  }
-
-  async updatePromoCode(codeId: string, data: any) {
-    return this.request(`/admin/promo-codes/${codeId}`, {
-      method: 'PUT',
-      body: JSON.stringify(data),
-    });
-  }
-
-  async deletePromoCode(codeId: string) {
-    return this.request(`/admin/promo-codes/${codeId}`, {
-      method: 'DELETE',
-    });
   }
 
   // Admin - User Management
