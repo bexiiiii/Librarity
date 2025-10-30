@@ -1,0 +1,30 @@
+[Unit]
+Description=Celery Worker Service for Librarity
+After=network.target redis.target
+
+[Service]
+Type=forking
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/librarity/backend
+Environment="PATH=/var/www/librarity/backend/venv/bin"
+ExecStart=/var/www/librarity/backend/venv/bin/celery -A workers.celery_app worker \
+    --loglevel=info \
+    --pool=solo \
+    --concurrency=1 \
+    --logfile=/var/log/celery/worker.log \
+    --pidfile=/var/run/celery/worker.pid \
+    --detach
+
+ExecStop=/var/www/librarity/backend/venv/bin/celery -A workers.celery_app control shutdown
+ExecReload=/var/www/librarity/backend/venv/bin/celery -A workers.celery_app control reload
+
+# Restart policy
+Restart=always
+RestartSec=10
+
+# Security
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

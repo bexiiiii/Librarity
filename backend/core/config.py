@@ -90,7 +90,10 @@ class Settings(BaseSettings):
     RATE_LIMIT_PER_HOUR: int = 1000
     
     # CORS
-    cors_origins: str = Field(default="http://localhost:3000", alias="CORS_ORIGINS")
+    cors_origins: str = Field(
+        default="http://localhost:3000,https://librarity.1edu.kz", 
+        alias="CORS_ORIGINS"
+    )
     
     @property
     def CORS_ORIGINS(self) -> List[str]:

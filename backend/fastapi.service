@@ -1,0 +1,37 @@
+[Unit]
+Description=FastAPI Backend Service for Librarity
+After=network.target postgresql.service redis.service
+
+[Service]
+Type=notify
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/librarity/backend
+Environment="PATH=/var/www/librarity/backend/venv/bin"
+
+# Загрузка переменных окружения из .env файла
+EnvironmentFile=/var/www/librarity/backend/.env
+
+# Запуск через uvicorn с несколькими воркерами
+ExecStart=/var/www/librarity/backend/venv/bin/uvicorn main:app \
+    --host 0.0.0.0 \
+    --port 8000 \
+    --workers 4 \
+    --log-level info \
+    --access-log \
+    --proxy-headers \
+    --forwarded-allow-ips='*'
+
+# Restart policy
+Restart=always
+RestartSec=10
+
+# Увеличиваем лимиты для production
+LimitNOFILE=65536
+
+# Security
+PrivateTmp=true
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target
