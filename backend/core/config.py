@@ -15,6 +15,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 class Settings(BaseSettings):
     """Application settings loaded from environment variables"""
     
+    # Base Directory
+    BASE_DIR: Path = BASE_DIR
+    
     # Application
     APP_NAME: str = "Librarity"
     ENVIRONMENT: str = "development"
@@ -36,6 +39,10 @@ class Settings(BaseSettings):
     # Redis
     REDIS_URL: str
     REDIS_PASSWORD: str = ""
+    REDIS_HOST: str = "localhost"
+    REDIS_PORT: int = 6379
+    REDIS_DB: int = 0
+    REDIS_CACHE_TTL: int = 3600  # Default cache TTL in seconds
     
     # Qdrant
     QDRANT_URL: str
@@ -55,15 +62,28 @@ class Settings(BaseSettings):
     POLAR_API_KEY: str = ""
     POLAR_ORGANIZATION_ID: str = ""
     POLAR_WEBHOOK_SECRET: str = ""
-    POLAR_API_URL: str = "https://api.polar.sh"
+    POLAR_SANDBOX_MODE: bool = True  # Set to False in production
+    POLAR_SERVER: str = "sandbox"  # "sandbox" or "production"
+    POLAR_SUCCESS_URL: str = "http://localhost:3000/subscription/success?checkout_id={CHECKOUT_ID}"
     
-    # File Storage
+    # MinIO Object Storage
+    MINIO_ENDPOINT: str = "api.euroline.storage.1edu.kz"
+    MINIO_ACCESS_KEY: str = "admin"
+    MINIO_SECRET_KEY: str = "admin12345"
+    MINIO_BUCKET_NAME: str = "librarityl"
+    MINIO_USE_SSL: bool = True
+    MINIO_REGION: str = "us-east-1"
+    
+    # Legacy S3 (kept for backward compatibility)
     S3_ENDPOINT: str = ""
     S3_ACCESS_KEY: str = ""
     S3_SECRET_KEY: str = ""
     S3_BUCKET_NAME: str = "librarity-books"
     S3_REGION: str = "us-east-1"
     USE_S3: bool = False
+    
+    # Storage Mode: "minio" or "local"
+    STORAGE_MODE: str = "minio"
     
     # Rate Limiting
     RATE_LIMIT_PER_MINUTE: int = 60
@@ -80,9 +100,9 @@ class Settings(BaseSettings):
         return self.cors_origins
     
     # Token Limits
-    FREE_TIER_TOKEN_LIMIT: int = 10000
-    PRO_TIER_TOKEN_LIMIT: int = 100000
-    ULTIMATE_TIER_TOKEN_LIMIT: int = 300000
+    FREE_TIER_TOKEN_LIMIT: int = 30000  # Увеличено для 3 книг
+    PRO_TIER_TOKEN_LIMIT: int = 200000  # Увеличено для Pro
+    ULTIMATE_TIER_TOKEN_LIMIT: int = 500000  # Увеличено для Ultimate
     
     # Book Processing
     MAX_UPLOAD_SIZE_MB: int = 50

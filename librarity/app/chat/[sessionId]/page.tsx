@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { api } from "@/lib/api";
+import api from "@/lib/api";
 import { motion } from "framer-motion";
 import { BookOpen, ArrowLeft, MessageCircle } from "lucide-react";
 import ReactMarkdown from "react-markdown";

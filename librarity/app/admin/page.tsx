@@ -17,6 +17,7 @@ import { SystemHealthTab } from "@/components/admin/SystemHealthTab";
 import { LogsTab } from "@/components/admin/LogsTab";
 import { SettingsTab } from "@/components/admin/SettingsTab";
 import { MetricsTab } from "@/components/admin/MetricsTab";
+import { TokenUsageTab } from "@/components/admin/TokenUsageTab";
 
 interface OverviewStats {
   users: {
@@ -260,6 +261,7 @@ export default function AdminPage() {
 
           {activeTab === "books" && <BooksTab />}
           {activeTab === "analytics" && <AnalyticsTab />}
+          {activeTab === "token-usage" && <TokenUsageTab />}
           {activeTab === "revenue" && <RevenueTab />}
           {activeTab === "metrics" && <MetricsTab />}
           {activeTab === "content" && <ContentTab />}

@@ -14,6 +14,7 @@ import {
   LogOut,
   User,
   BarChart3,
+  Zap,
 } from "lucide-react";
 
 interface AdminUser {
@@ -35,6 +36,7 @@ export function Sidebar({ activeTab, setActiveTab, currentUser, handleLogout }: 
     { id: "users", label: "Users", icon: Users },
     { id: "books", label: "Books", icon: BookOpen },
     { id: "analytics", label: "Analytics", icon: TrendingUp },
+    { id: "token-usage", label: "Token Usage", icon: Zap },
     { id: "revenue", label: "Revenue", icon: DollarSign },
     { id: "metrics", label: "Startup Metrics", icon: BarChart3 },
     { id: "content", label: "Content", icon: FileText },

@@ -52,6 +52,11 @@ class APIClient {
     return response.json();
   }
 
+  // Generic GET method
+  async get(endpoint: string) {
+    return this.request(endpoint, { method: 'GET' });
+  }
+
   // Auth endpoints
   async register(data: { email: string; password: string; full_name?: string; username?: string }) {
     const response = await this.request('/auth/register', {
@@ -80,7 +85,11 @@ class APIClient {
   }
 
   // Books endpoints
-  async uploadBook(file: File, metadata?: { title?: string; author?: string; description?: string }) {
+  async uploadBook(
+    file: File, 
+    metadata?: { title?: string; author?: string; description?: string },
+    onProgress?: (progress: number) => void
+  ) {
     const formData = new FormData();
     formData.append('file', file);
     if (metadata?.title) formData.append('title', metadata.title);
@@ -92,18 +101,48 @@ class APIClient {
       headers['Authorization'] = `Bearer ${this.token}`;
     }
 
-    const response = await fetch(`${this.baseURL}/books/upload`, {
-      method: 'POST',
-      headers,
-      body: formData,
+    // Use XMLHttpRequest for upload progress
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+
+      xhr.upload.addEventListener('progress', (e) => {
+        if (e.lengthComputable && onProgress) {
+          const progress = Math.round((e.loaded / e.total) * 100);
+          onProgress(progress);
+        }
+      });
+
+      xhr.addEventListener('load', () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          try {
+            const response = JSON.parse(xhr.responseText);
+            resolve(response);
+          } catch (e) {
+            reject(new Error('Invalid JSON response'));
+          }
+        } else {
+          try {
+            const error = JSON.parse(xhr.responseText);
+            reject(new Error(error.detail || 'Upload failed'));
+          } catch (e) {
+            reject(new Error('Upload failed'));
+          }
+        }
+      });
+
+      xhr.addEventListener('error', () => {
+        reject(new Error('Network error'));
+      });
+
+      xhr.open('POST', `${this.baseURL}/books/upload`);
+      
+      // Set authorization header
+      if (this.token) {
+        xhr.setRequestHeader('Authorization', `Bearer ${this.token}`);
+      }
+
+      xhr.send(formData);
     });
-
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({ error: 'Upload failed' }));
-      throw new Error(error.detail || 'Upload failed');
-    }
-
-    return response.json();
   }
 
   async getBooks(page = 1, pageSize = 20) {
@@ -362,7 +401,142 @@ class APIClient {
   async checkPolarStatus() {
     return this.request('/polar/status');
   }
+
+  // Token Usage Analytics endpoints (Admin only)
+  async getTokenUsageSummary(days = 30) {
+    return this.request(`/admin/analytics/token-usage/summary?days=${days}`);
+  }
+
+  async getTokenUsageByAction(days = 30) {
+    return this.request(`/admin/analytics/token-usage/by-action?days=${days}`);
+  }
+
+  async getTokenUsageByUser(days = 30) {
+    return this.request(`/admin/analytics/token-usage/by-user?days=${days}`);
+  }
+
+  async getTokenUsageTimeline(days = 30) {
+    return this.request(`/admin/analytics/token-usage/timeline?days=${days}`);
+  }
+
+  // Admin - Books Management
+  async getAdminBooks(page = 1, limit = 10, filters?: any) {
+    const params = new URLSearchParams({
+      page: page.toString(),
+      limit: limit.toString(),
+      ...(filters || {})
+    });
+    return this.request(`/admin/books?${params}`);
+  }
+
+  async updateBookStatus(bookId: string, status: string) {
+    return this.request(`/admin/books/${bookId}/status`, {
+      method: 'PUT',
+      body: JSON.stringify({ status }),
+    });
+  }
+
+  async deleteBook(bookId: string) {
+    return this.request(`/admin/books/${bookId}`, {
+      method: 'DELETE',
+    });
+  }
+
+  // Admin - Analytics
+  async getBookAnalytics(days = 30) {
+    return this.request(`/admin/analytics/books?days=${days}`);
+  }
+
+  async getStartupMetrics(days = 30) {
+    return this.request(`/admin/analytics/metrics?days=${days}`);
+  }
+
+  // Admin - Revenue/Payments
+  async getPaymentHistory(page = 1, limit = 20) {
+    return this.request(`/admin/payments?page=${page}&limit=${limit}`);
+  }
+
+  async getRevenueStats(days = 30) {
+    return this.request(`/admin/revenue/stats?days=${days}`);
+  }
+
+  // Admin - Shared Content
+  async getSharedContent(page = 1, limit = 20) {
+    return this.request(`/admin/shared-content?page=${page}&limit=${limit}`);
+  }
+
+  async deleteSharedContent(contentId: string) {
+    return this.request(`/admin/shared-content/${contentId}`, {
+      method: 'DELETE',
+    });
+  }
+
+  // Admin - System Logs
+  async getSystemLogs(page = 1, limit = 50, level?: string) {
+    const params = new URLSearchParams({
+      page: page.toString(),
+      limit: limit.toString(),
+      ...(level ? { level } : {})
+    });
+    return this.request(`/admin/logs?${params}`);
+  }
+
+  // Admin - Promo Codes
+  async getPromoCodes() {
+    return this.request('/admin/promo-codes');
+  }
+
+  async createPromoCode(data: any) {
+    return this.request('/admin/promo-codes', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updatePromoCode(codeId: string, data: any) {
+    return this.request(`/admin/promo-codes/${codeId}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deletePromoCode(codeId: string) {
+    return this.request(`/admin/promo-codes/${codeId}`, {
+      method: 'DELETE',
+    });
+  }
+
+  // Admin - User Management
+  async getAdminUsers(page = 1, limit = 20, filters?: any) {
+    const params = new URLSearchParams({
+      page: page.toString(),
+      limit: limit.toString(),
+      ...(filters || {})
+    });
+    return this.request(`/admin/users?${params}`);
+  }
+
+  async updateUserSubscription(userId: string, data: any) {
+    return this.request(`/admin/users/${userId}/subscription`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async banUser(userId: string, reason?: string) {
+    return this.request(`/admin/users/${userId}/ban`, {
+      method: 'POST',
+      body: JSON.stringify({ reason }),
+    });
+  }
+
+  async unbanUser(userId: string) {
+    return this.request(`/admin/users/${userId}/unban`, {
+      method: 'POST',
+    });
+  }
 }
 
-export const api = new APIClient(API_BASE_URL);
+const api = new APIClient(API_BASE_URL);
+
 export default api;

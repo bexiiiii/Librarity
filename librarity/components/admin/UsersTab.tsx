@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Search, Ban, CheckCircle, Edit, X, Check } from "lucide-react";
-import { api } from "@/lib/api";
+import api from "@/lib/api";
 
 interface AdminUser {
   id: string;

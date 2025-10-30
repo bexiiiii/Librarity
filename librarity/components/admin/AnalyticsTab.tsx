@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { TrendingUp, BarChart3, MessageSquare, BookOpen, AlertCircle } from "lucide-react";
-import { api } from "@/lib/api";
+import api from "@/lib/api";
 
 interface BookAnalytics {
   book_id: string;

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
-import { api } from '@/lib/api';
+import api from '@/lib/api';
 import { 
   MessageSquare, 
   Search, 
@@ -31,20 +31,23 @@ interface ChatSession {
 }
 
 interface SidebarProps {
-  onNewChat?: () => void;
-  onSelectChat?: (sessionId: string) => void;
   isOpen: boolean;
-  onToggle: (open: boolean) => void;
+  setIsOpen: (isOpen: boolean) => void;
+  user: { email?: string; username?: string } | null;
+  subscription: { subscription_tier?: string; tokens_remaining?: number; max_tokens?: number } | null;
+  onNewChat: () => void;
+  onSelectChat: (sessionId: string) => void;
+  onToggle?: () => void;
 }
 
-export function Sidebar({ onNewChat, onSelectChat, isOpen, onToggle }: SidebarProps) {
+export function Sidebar({ onNewChat, onSelectChat, isOpen, onToggle, setIsOpen, user: propsUser, subscription: propsSubscription }: SidebarProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [chatSessions, setChatSessions] = useState<ChatSession[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<{ email?: string; username?: string } | null>(propsUser);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [subscription, setSubscription] = useState<any>(null);
+  const [subscription, setSubscription] = useState<{ subscription_tier?: string; tokens_remaining?: number; max_tokens?: number } | null>(propsSubscription);
   const [showProfileModal, setShowProfileModal] = useState(false);
 
   // Функция загрузки сессий - вынесена для переиспользования
@@ -144,20 +147,20 @@ export function Sidebar({ onNewChat, onSelectChat, isOpen, onToggle }: SidebarPr
 
   const getSubscriptionTier = () => {
     if (!subscription) return 'Free plan';
-    const tier = subscription.tier || 'free';
+    const tier = subscription.subscription_tier || 'free';
     return tier.charAt(0).toUpperCase() + tier.slice(1) + ' plan';
   };
 
   const shouldShowProPlan = () => {
     // Показываем Pro Plan только для пользователей с Free планом
-    return isAuthenticated && (!subscription || subscription.tier === 'free');
+    return isAuthenticated && (!subscription || subscription.subscription_tier === 'free');
   };
 
   return (
     <>
       {/* Toggle Button - Мобильная версия */}
       <motion.button
-        onClick={() => onToggle(!isOpen)}
+        onClick={() => onToggle ? onToggle() : setIsOpen(!isOpen)}
         className="fixed top-4 left-4 z-50 w-10 h-10 bg-white/[0.03] hover:bg-white/[0.05] rounded-xl flex items-center justify-center transition-colors border border-white/[0.05] backdrop-blur-xl md:hidden"
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
@@ -168,7 +171,7 @@ export function Sidebar({ onNewChat, onSelectChat, isOpen, onToggle }: SidebarPr
       {/* Toggle Button - Десктопная версия (внутри сайдбара) */}
       {isOpen && (
         <motion.button
-          onClick={() => onToggle(false)}
+          onClick={() => onToggle ? onToggle() : setIsOpen(false)}
           className="hidden md:flex fixed top-4 left-[calc(20rem-2rem)] z-50 w-10 h-10 bg-white/[0.03] hover:bg-white/[0.05] rounded-xl items-center justify-center transition-colors border border-white/[0.05] backdrop-blur-xl"
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
@@ -187,7 +190,7 @@ export function Sidebar({ onNewChat, onSelectChat, isOpen, onToggle }: SidebarPr
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            onClick={() => onToggle(false)}
+            onClick={() => onToggle ? onToggle() : setIsOpen(false)}
             className="fixed inset-0 bg-black/50 backdrop-blur-sm z-30 md:hidden"
           />
         )}

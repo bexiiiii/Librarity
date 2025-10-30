@@ -1,7 +1,7 @@
 """
 Book Model - Uploaded books and their metadata
 """
-from sqlalchemy import Column, String, Integer, Text, DateTime, ForeignKey, Boolean, Float
+from sqlalchemy import Column, String, Integer, Text, DateTime, ForeignKey, Boolean, Float, Index
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import relationship
 from datetime import datetime
@@ -13,6 +13,14 @@ from core.database import Base
 class Book(Base):
     """Book model for uploaded and processed books"""
     __tablename__ = "books"
+    
+    # Composite indexes for common queries
+    __table_args__ = (
+        Index('idx_owner_created', 'owner_id', 'created_at'),
+        Index('idx_owner_status', 'owner_id', 'processing_status'),
+        Index('idx_owner_processed', 'owner_id', 'is_processed'),
+        Index('idx_file_hash_owner', 'file_hash', 'owner_id'),
+    )
     
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     owner_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
@@ -30,6 +38,7 @@ class Book(Base):
     file_type = Column(String(10), nullable=False)  # pdf, epub, txt
     file_size = Column(Integer, nullable=False)  # bytes
     file_path = Column(String(1000), nullable=False)  # S3 or local path
+    file_hash = Column(String(64), nullable=True, index=True)  # SHA256 hash for deduplication
     
     # Processing info
     total_pages = Column(Integer, nullable=True)

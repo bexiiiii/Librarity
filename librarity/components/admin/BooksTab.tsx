@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { BookOpen, Search, Trash2, RefreshCw, Eye, User } from "lucide-react";
-import { api } from "@/lib/api";
+import api from "@/lib/api";
 
 interface BookOwner {
   id: string;

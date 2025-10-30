@@ -17,9 +17,17 @@ from api import auth, books, chat, subscription, admin, analytics, revenue, bill
 from api import admin_extended
 from core.logging_config import setup_logging
 
+# Import Celery app to ensure it's initialized
+from workers.celery_app import celery_app
+
 # Setup structured logging
 setup_logging()
 logger = structlog.get_logger()
+
+# Log Celery configuration
+logger.info("celery_config", 
+            broker=celery_app.conf.broker_url, 
+            backend=celery_app.conf.result_backend)
 
 
 @asynccontextmanager
@@ -143,10 +151,11 @@ app.include_router(admin_extended.router, prefix="/api/admin", tags=["Admin Exte
 app.include_router(analytics.router, prefix="/api", tags=["Analytics"])
 app.include_router(revenue.router, prefix="/api", tags=["Revenue & Payments"])
 
-# Mount uploads directory for serving files
-uploads_dir = os.path.join(os.path.dirname(__file__), "uploads")
-if not os.path.exists(uploads_dir):
-    os.makedirs(uploads_dir)
+# Mount uploads directory for serving files.
+# Use a single project-level uploads directory so both FastAPI and Celery
+# refer to the same absolute path regardless of working directory.
+uploads_dir = os.path.join(settings.BASE_DIR, "uploads")
+os.makedirs(uploads_dir, exist_ok=True)
 app.mount("/uploads", StaticFiles(directory=uploads_dir), name="uploads")
 
 

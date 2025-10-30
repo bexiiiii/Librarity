@@ -3,8 +3,10 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Send, Book, Sparkles, Loader2, Plus } from 'lucide-react';
-import { api } from '@/lib/api';
+import api from '@/lib/api';
 import { Button } from '@/components/ui/button';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 interface Message {
   id: string;
@@ -239,7 +241,54 @@ export function BookChat({ onUploadClick }: BookChatProps) {
                       }
                     `}
                   >
-                    <p className="whitespace-pre-wrap break-words">{message.content}</p>
+                    {message.role === 'user' ? (
+                      <p className="whitespace-pre-wrap break-words">{message.content}</p>
+                    ) : (
+                      <ReactMarkdown
+                        remarkPlugins={[remarkGfm]}
+                        components={{
+                          strong: ({ children }) => (
+                            <strong className="font-bold text-white">{children}</strong>
+                          ),
+                          em: ({ children }) => (
+                            <em className="italic text-white/80">{children}</em>
+                          ),
+                          ul: ({ children }) => (
+                            <ul className="list-disc list-inside mb-3 space-y-1">{children}</ul>
+                          ),
+                          ol: ({ children }) => (
+                            <ol className="list-decimal list-inside mb-3 space-y-1">{children}</ol>
+                          ),
+                          li: ({ children }) => (
+                            <li className="ml-2">{children}</li>
+                          ),
+                          h1: ({ children }) => (
+                            <h1 className="text-xl font-bold text-white mb-3 mt-4">{children}</h1>
+                          ),
+                          h2: ({ children }) => (
+                            <h2 className="text-lg font-bold text-white mb-2 mt-3">{children}</h2>
+                          ),
+                          h3: ({ children }) => (
+                            <h3 className="text-base font-bold text-white mb-2 mt-2">{children}</h3>
+                          ),
+                          blockquote: ({ children }) => (
+                            <blockquote className="border-l-4 border-violet-500 pl-4 italic my-3 text-white/70">
+                              {children}
+                            </blockquote>
+                          ),
+                          code: ({ children }) => (
+                            <code className="bg-white/10 px-1.5 py-0.5 rounded text-violet-300 text-sm">
+                              {children}
+                            </code>
+                          ),
+                          p: ({ children }) => (
+                            <p className="mb-3 last:mb-0 whitespace-pre-wrap break-words">{children}</p>
+                          ),
+                        }}
+                      >
+                        {message.content}
+                      </ReactMarkdown>
+                    )}
                   </div>
                 </motion.div>
               ))}

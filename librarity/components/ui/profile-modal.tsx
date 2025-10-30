@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, User, Mail, Calendar, LogOut, Settings, Crown } from 'lucide-react';
-import { api } from '@/lib/api';
+import api from '@/lib/api';
 import { cn } from '@/lib/utils';
 
 interface ProfileModalProps {
@@ -130,16 +130,45 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
           />
 
           {/* Modal Container */}
-          <div className="fixed inset-0 flex items-center justify-center p-4 z-50">
+          <div className="fixed inset-0 flex items-center justify-center md:p-4 p-0 z-50">
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="flex w-full max-w-6xl h-[85vh] bg-[#0a0a0b] rounded-3xl overflow-hidden shadow-2xl"
+              className="flex flex-col md:flex-row w-full md:max-w-6xl md:h-[85vh] h-full bg-[#0a0a0b] md:rounded-3xl rounded-none overflow-hidden shadow-2xl"
             >
-              {/* Left Sidebar */}
-              <div className="w-80 bg-[#18181b] flex flex-col flex-shrink-0">
+              {/* Mobile Header - показывается только на мобильных */}
+              <div className="md:hidden w-full bg-[#18181b] flex items-center justify-between px-4 py-4 border-b border-white/10">
+                <div className="flex items-center gap-3">
+                  {!isLoading && user && (
+                    <>
+                      <div className="w-10 h-10 bg-gradient-to-br from-yellow-200 to-lime-300 rounded-full flex items-center justify-center">
+                        <span className="text-base font-bold text-gray-800">
+                          {getUserInitial()}
+                        </span>
+                      </div>
+                      <div>
+                        <h2 className="text-sm font-semibold text-white">
+                          {user?.username || user?.email?.split('@')[0] || 'User'}
+                        </h2>
+                        <p className="text-xs text-gray-400">
+                          {getSubscriptionTier()} Plan
+                        </p>
+                      </div>
+                    </>
+                  )}
+                </div>
+                <button
+                  onClick={onClose}
+                  className="p-2 rounded-full bg-white/5 hover:bg-white/10 transition-colors"
+                >
+                  <X className="w-5 h-5 text-white" />
+                </button>
+              </div>
+
+              {/* Left Sidebar - скрыт на мобильных */}
+              <div className="hidden md:flex md:w-80 w-full bg-[#18181b] flex-col flex-shrink-0">
 
               {/* Sidebar Header */}
               <div className="p-6 space-y-6">
@@ -147,7 +176,7 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                 {!isLoading && user && (
                   <div className="space-y-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-14 h-14 bg-gradient-to-br from-yellow-200 to-lime-300 rounded-full flex items-center justify-center">
+                      <div className="w-14 h-14 bg-gradient-to-br from-purple-200 to-violete-300 rounded-full flex items-center justify-center">
                         <span className="text-xl font-bold text-gray-800">
                           {getUserInitial()}
                         </span>
@@ -251,13 +280,55 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
 
             {/* Right Content Area */}
             <div className="flex-1 bg-[#0a0a0b] overflow-y-auto relative">
-              <div className="max-w-4xl p-8">
-                {/* Close Button */}
+              {/* Mobile Navigation Tabs */}
+              <div className="md:hidden sticky top-0 z-10 bg-[#18181b] border-b border-white/10 px-4 py-2">
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setActiveSection('account')}
+                    className={cn(
+                      "flex-1 py-2 px-3 rounded-lg text-xs font-medium transition-colors",
+                      activeSection === 'account' 
+                        ? "bg-white/10 text-white" 
+                        : "text-gray-400"
+                    )}
+                  >
+                    <User className="w-4 h-4 mx-auto mb-1" />
+                    Account
+                  </button>
+                  <button
+                    onClick={() => setActiveSection('subscription')}
+                    className={cn(
+                      "flex-1 py-2 px-3 rounded-lg text-xs font-medium transition-colors",
+                      activeSection === 'subscription' 
+                        ? "bg-white/10 text-white" 
+                        : "text-gray-400"
+                    )}
+                  >
+                    <Crown className="w-4 h-4 mx-auto mb-1" />
+                    Subscription
+                  </button>
+                  <button
+                    onClick={() => setActiveSection('promocode')}
+                    className={cn(
+                      "flex-1 py-2 px-3 rounded-lg text-xs font-medium transition-colors",
+                      activeSection === 'promocode' 
+                        ? "bg-white/10 text-white" 
+                        : "text-gray-400"
+                    )}
+                  >
+                    <Settings className="w-4 h-4 mx-auto mb-1" />
+                    Promo
+                  </button>
+                </div>
+              </div>
+
+              <div className="max-w-4xl p-4 md:p-8">
+                {/* Close Button - только для десктопа */}
                 <motion.button
                   onClick={onClose}
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
-                  className="absolute top-8 right-8 w-10 h-10 bg-[#27272a] hover:bg-[#3a3a3f] rounded-full flex items-center justify-center transition-colors"
+                  className="hidden md:flex absolute top-8 right-8 w-10 h-10 bg-[#27272a] hover:bg-[#3a3a3f] rounded-full items-center justify-center transition-colors"
                 >
                   <X className="w-5 h-5 text-gray-400" />
                 </motion.button>
@@ -270,11 +341,11 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                   <>
                     {/* Account Section */}
                     {activeSection === 'account' && (
-                      <div className="space-y-8">
-                        {/* Header with Avatar */}
-                        <div className="bg-[#27272a] rounded-3xl p-8">
+                      <div className="space-y-4 md:space-y-8">
+                        {/* Header with Avatar - скрыт на мобильных */}
+                        <div className="hidden md:block bg-[#27272a] rounded-3xl p-8">
                           <div className="flex items-center gap-4">
-                            <div className="w-20 h-20 bg-gradient-to-br from-yellow-200 to-lime-300 rounded-full flex items-center justify-center">
+                            <div className="w-20 h-20 bg-gradient-to-br from-purple-200 to-violet-300 rounded-full flex items-center justify-center">
                               <span className="text-3xl font-bold text-gray-800">
                                 {getUserInitial()}
                               </span>
@@ -291,33 +362,33 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                         </div>
 
                         {/* Account Details */}
-                        <div className="bg-[#27272a] rounded-3xl p-8">
-                          <h3 className="text-2xl font-bold text-white mb-6">Account details</h3>
-                          <div className="space-y-6">
+                        <div className="bg-[#27272a] rounded-2xl md:rounded-3xl p-4 md:p-8">
+                          <h3 className="text-lg md:text-2xl font-bold text-white mb-4 md:mb-6">Account details</h3>
+                          <div className="space-y-4 md:space-y-6">
                             <div>
-                              <label className="text-sm text-gray-500 mb-2 block">Username</label>
-                              <p className="text-lg text-white">{user?.username || user?.email?.split('@')[0] || 'Not set'}</p>
+                              <label className="text-xs md:text-sm text-gray-500 mb-1 md:mb-2 block">Username</label>
+                              <p className="text-sm md:text-lg text-white">{user?.username || user?.email?.split('@')[0] || 'Not set'}</p>
                             </div>
                             <div>
-                              <label className="text-sm text-gray-500 mb-2 block">Email</label>
-                              <p className="text-lg text-white">{user?.email}</p>
+                              <label className="text-xs md:text-sm text-gray-500 mb-1 md:mb-2 block">Email</label>
+                              <p className="text-sm md:text-lg text-white break-all">{user?.email}</p>
                             </div>
                           </div>
                         </div>
 
                         {/* Subscription Section */}
                         {subscription && (
-                          <div className="bg-[#27272a] rounded-3xl p-8">
-                            <h3 className="text-2xl font-bold text-white mb-6">Subscription</h3>
-                            <div className="bg-gradient-to-br from-[#eb6a48] to-[#d85a38] rounded-2xl p-6">
-                              <div className="flex items-center justify-between">
+                          <div className="bg-[#27272a] rounded-2xl md:rounded-3xl p-4 md:p-8">
+                            <h3 className="text-lg md:text-2xl font-bold text-white mb-4 md:mb-6">Subscription</h3>
+                            <div className="bg-gradient-to-br from-[#ff4ba8] to-[#ff4ba8] rounded-xl md:rounded-2xl p-4 md:p-6">
+                              <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                                 <div className="flex items-center gap-3">
-                                  <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
-                                    <Crown className="w-6 h-6 text-white" />
+                                  <div className="w-10 h-10 md:w-12 md:h-12 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
+                                    <Crown className="w-5 h-5 md:w-6 md:h-6 text-white" />
                                   </div>
                                   <div>
-                                    <p className="text-white font-semibold text-xl">{getSubscriptionTier()} Plan</p>
-                                    <p className="text-white/80 text-sm">
+                                    <p className="text-white font-semibold text-base md:text-xl">{getSubscriptionTier()} Plan</p>
+                                    <p className="text-white/80 text-xs md:text-sm">
                                       {subscription?.tier === 'free' 
                                         ? 'Upgrade to unlock more features' 
                                         : 'You have full access'}
@@ -329,7 +400,7 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                                     whileHover={{ scale: 1.05 }}
                                     whileTap={{ scale: 0.95 }}
                                     onClick={() => window.location.href = '/pricing'}
-                                    className="px-6 py-3 bg-white text-[#eb6a48] font-semibold rounded-xl hover:bg-white/90 transition-colors"
+                                    className="w-full md:w-auto px-6 py-2 md:py-3 bg-white text-[#ff4ba8] font-semibold text-sm md:text-base rounded-xl hover:bg-white/90 transition-colors"
                                   >
                                     Upgrade
                                   </motion.button>
@@ -343,8 +414,8 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
 
                     {/* Promocode Section */}
                     {activeSection === 'promocode' && (
-                      <div className="flex flex-col items-center justify-center min-h-[500px]">
-                        <h1 className="text-5xl font-bold text-white mb-12">Enter code</h1>
+                      <div className="flex flex-col items-center justify-center min-h-[400px] md:min-h-[500px] px-4">
+                        <h1 className="text-3xl md:text-5xl font-bold text-white mb-8 md:mb-12">Enter code</h1>
                         
                         <div className="w-full max-w-md space-y-4">
                           <input
@@ -365,7 +436,7 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
                             onClick={handleApplyPromoCode}
-                            className="w-full px-6 py-4 bg-[#eb6a48] text-white font-semibold rounded-2xl hover:bg-[#d85a38] transition-colors text-lg"
+                            className="w-full px-6 py-4 bg-[#ff4ba8] text-white font-semibold rounded-2xl hover:bg-[#d85a38] transition-colors text-lg"
                           >
                             Apply Code
                           </motion.button>
@@ -388,8 +459,8 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                             <div className="bg-[#27272a] rounded-3xl p-6">
                               <div className="flex items-start justify-between mb-4">
                                 <div className="flex items-center gap-4">
-                                  <div className="w-14 h-14 bg-[#eb6a48]/20 rounded-2xl flex items-center justify-center">
-                                    <Crown className="w-7 h-7 text-[#eb6a48]" />
+                                  <div className="w-14 h-14 bg-[#ff4ba8]/20 rounded-2xl flex items-center justify-center">
+                                    <Crown className="w-7 h-7 text-[#ff4ba8]" />
                                   </div>
                                   <div>
                                     <h2 className="text-2xl font-bold text-white capitalize">
@@ -404,7 +475,7 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                                   whileHover={{ scale: 1.05 }}
                                   whileTap={{ scale: 0.95 }}
                                   onClick={() => setShowPricingPlans(true)}
-                                  className="px-6 py-3 bg-[#eb6a48] text-white font-semibold rounded-xl hover:bg-[#d85a38] transition-colors"
+                                  className="px-6 py-3 bg-[#ff4ba8] text-white font-semibold rounded-xl hover:bg-[#ff00a6] transition-colors"
                                 >
                                   Manage
                                 </motion.button>
@@ -499,10 +570,10 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                               {/* Pro Plan */}
                               <motion.div
                                 whileHover={{ scale: 1.02 }}
-                                className="bg-[#27272a] rounded-3xl p-6 border-2 border-[#eb6a48] relative"
+                                className="bg-[#27272a] rounded-3xl p-6 border-2 border-[#ff4ba8] relative"
                               >
                                 <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                                  <span className="bg-[#eb6a48] text-white px-4 py-1 rounded-full text-sm font-semibold">
+                                  <span className="bg-[#ff4ba8] text-white px-4 py-1 rounded-full text-sm font-semibold">
                                     Popular
                                   </span>
                                 </div>
@@ -557,7 +628,7 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                                     "w-full py-3 rounded-xl font-semibold transition-colors",
                                     subscription?.tier === 'pro'
                                       ? "bg-gray-700 text-gray-400 cursor-not-allowed"
-                                      : "bg-[#eb6a48] text-white hover:bg-[#d85a38]"
+                                      : "bg-[#ff4ba8] text-white hover:bg-[#ff008c]"
                                   )}
                                 >
                                   {subscription?.tier === 'pro' ? 'Current Plan' : 'Upgrade to Pro'}
@@ -638,7 +709,7 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                                 <motion.button
                                   whileHover={{ scale: 1.05 }}
                                   whileTap={{ scale: 0.95 }}
-                                  className="px-6 py-3 bg-[#eb6a48] text-white font-semibold rounded-xl hover:bg-[#d85a38] transition-colors"
+                                  className="px-6 py-3 bg-[#ff4ba8] text-white font-semibold rounded-xl hover:bg-[#d85a38] transition-colors"
                                 >
                                   Buy credits
                                 </motion.button>
@@ -656,7 +727,7 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                                 
                                 <div className="w-full bg-gray-800 rounded-full h-3">
                                   <div
-                                    className="bg-[#eb6a48] h-3 rounded-full transition-all"
+                                    className="bg-[#ff4ba8] h-3 rounded-full transition-all"
                                     style={{
                                       width: `${subscription?.tokens_usage_percentage || 0}%`
                                     }}
@@ -711,7 +782,7 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                                                 href={payment.invoice_url} 
                                                 target="_blank" 
                                                 rel="noopener noreferrer"
-                                                className="text-[#eb6a48] hover:text-[#d85a38] transition-colors"
+                                                className="text-[#ff4ba8] hover:text-[#ff006f] transition-colors"
                                               >
                                                 View
                                               </a>
@@ -775,6 +846,19 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                     )}
                   </>
                 )}
+                
+                {/* Mobile Logout Button */}
+                <div className="md:hidden mt-8 pb-4">
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={handleLogout}
+                    className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-red-900/20 text-red-400 border-2 border-red-900/50 rounded-xl hover:bg-red-900/30 transition-colors font-semibold"
+                  >
+                    <LogOut className="w-5 h-5" />
+                    <span>Log out</span>
+                  </motion.button>
+                </div>
               </div>
             </div>
             </motion.div>

@@ -3,7 +3,7 @@
 import { useState, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Upload, X, FileText, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
-import { api } from '@/lib/api';
+import api from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -152,6 +152,28 @@ export function BookUpload({ onUploadSuccess, onClose }: BookUploadProps) {
             </Button>
           )}
         </div>
+
+        {/* Welcome Message */}
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#eb6a48]/10 via-purple-500/5 to-blue-500/5 border border-white/[0.08] p-6"
+        >
+          <div className="relative z-10">
+            <h3 className="text-lg font-semibold text-white mb-2 flex items-center gap-2">
+              <span className="text-2xl">👋</span>
+              Welcome to Librarity!
+            </h3>
+            <p className="text-sm text-white/70 leading-relaxed">
+              Transform your reading experience with AI-powered insights. Upload your book and start having intelligent conversations about its content. Ask questions, get summaries, and dive deeper into any topic.
+            </p>
+          </div>
+          
+          {/* Decorative gradient orb */}
+          <div className="absolute -top-10 -right-10 w-40 h-40 bg-[#eb6a48]/20 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-purple-500/20 rounded-full blur-3xl pointer-events-none" />
+        </motion.div>
 
         {/* Drop Zone */}
         <div

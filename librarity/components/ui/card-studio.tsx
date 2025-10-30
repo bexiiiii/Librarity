@@ -5,10 +5,14 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useState } from 'react'
-import { api } from '@/lib/api'
+import api from '@/lib/api'
 import { useRouter } from 'next/navigation'
 
-const CardDemo = () => {
+interface CardDemoProps {
+  onSuccess?: () => void;
+}
+
+const CardDemo = ({ onSuccess }: CardDemoProps) => {
   const [mode, setMode] = useState<'login' | 'register'>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -18,17 +22,22 @@ const CardDemo = () => {
   const [error, setError] = useState('');
   const router = useRouter();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+    const handleAuthSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError('');
 
     try {
       if (mode === 'login') {
-        await api.login(email, password);
-        // Перезагружаем страницу для обновления состояния авторизации
-        router.refresh();
-        window.location.reload();
+        const response = await api.login(email, password);
+        // Если передан onSuccess, вызываем его (используется в модалке)
+        if (onSuccess) {
+          onSuccess();
+        } else {
+          // Иначе перезагружаем страницу (используется на странице логина)
+          router.refresh();
+          window.location.reload();
+        }
       } else {
         // Регистрация
         if (password !== confirmPassword) {
@@ -36,15 +45,22 @@ const CardDemo = () => {
           setIsLoading(false);
           return;
         }
-        await api.register({ email, password, full_name: fullName });
+        const regResponse = await api.register({ email, password, full_name: fullName });
         // После успешной регистрации автоматически логинимся
-        await api.login(email, password);
-        router.refresh();
-        window.location.reload();
+        const loginResponse = await api.login(email, password);
+        // Если передан onSuccess, вызываем его (используется в модалке)
+        if (onSuccess) {
+          onSuccess();
+        } else {
+          // Иначе перезагружаем страницу (используется на странице логина)
+          router.refresh();
+          window.location.reload();
+        }
       }
     } catch (err: any) {
-      setError(err.response?.data?.message || 
-        (mode === 'login' ? 'Ошибка входа. Проверьте данные.' : 'Ошибка регистрации. Попробуйте снова.'));
+      const errorMessage = err.message || err.response?.data?.message || 
+        (mode === 'login' ? 'Ошибка входа. Проверьте данные.' : 'Ошибка регистрации. Попробуйте снова.');
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -135,7 +151,7 @@ const CardDemo = () => {
           <CardFooter className='flex-col gap-2 px-0 pt-6'>
             <Button 
               type='submit' 
-              className='w-full bg-[#eb6a48] hover:bg-[#d85a38] text-white'
+              className='w-full bg-[#ff4ba8] hover:bg-[#ff0084] text-white'
               disabled={isLoading}
             >
               {isLoading 
@@ -155,7 +171,7 @@ const CardDemo = () => {
                       setMode('register');
                       setError('');
                     }}
-                    className='underline underline-offset-4 hover:text-[#eb6a48]'
+                    className='underline underline-offset-4 hover:text-[#ff4ba8]'
                   >
                     Зарегистрироваться
                   </button>
@@ -169,7 +185,7 @@ const CardDemo = () => {
                       setMode('login');
                       setError('');
                     }}
-                    className='underline underline-offset-4 hover:text-[#eb6a48]'
+                    className='underline underline-offset-4 hover:text-[#ff4ba8]'
                   >
                     Войти
                   </button>

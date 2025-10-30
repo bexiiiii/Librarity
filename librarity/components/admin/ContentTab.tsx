@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { FileText, Star, Eye, Share2, TrendingUp, AlertCircle } from "lucide-react";
-import { api } from "@/lib/api";
+import api from "@/lib/api";
 
 interface SharedContent {
   id: string;

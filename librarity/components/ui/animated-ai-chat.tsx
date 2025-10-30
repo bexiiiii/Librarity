@@ -2,7 +2,9 @@
 
 import { useEffect, useRef, useCallback, useTransition, useState } from "react";
 import { cn } from "@/lib/utils";
-import { api } from "@/lib/api";
+import api from "@/lib/api";
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import {
     ImageIcon,
     FileUp,
@@ -896,7 +898,54 @@ export function AnimatedAIChat({ onUploadClick, uploadedBook, onRemoveBook, curr
                                                             : 'bg-[#f7f7f7] text-black rounded-bl-md'  // AI слева
                                                     )}
                                                 >
-                                                    <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
+                                                    {isUserMessage ? (
+                                                        <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
+                                                    ) : (
+                                                        <ReactMarkdown
+                                                            remarkPlugins={[remarkGfm]}
+                                                            components={{
+                                                                strong: ({ children }) => (
+                                                                    <strong className="font-bold text-black">{children}</strong>
+                                                                ),
+                                                                em: ({ children }) => (
+                                                                    <em className="italic text-black/80">{children}</em>
+                                                                ),
+                                                                ul: ({ children }) => (
+                                                                    <ul className="list-disc list-inside mb-3 space-y-1">{children}</ul>
+                                                                ),
+                                                                ol: ({ children }) => (
+                                                                    <ol className="list-decimal list-inside mb-3 space-y-1">{children}</ol>
+                                                                ),
+                                                                li: ({ children }) => (
+                                                                    <li className="ml-2">{children}</li>
+                                                                ),
+                                                                h1: ({ children }) => (
+                                                                    <h1 className="text-lg font-bold text-black mb-2 mt-3">{children}</h1>
+                                                                ),
+                                                                h2: ({ children }) => (
+                                                                    <h2 className="text-base font-bold text-black mb-2 mt-2">{children}</h2>
+                                                                ),
+                                                                h3: ({ children }) => (
+                                                                    <h3 className="text-sm font-bold text-black mb-1 mt-2">{children}</h3>
+                                                                ),
+                                                                blockquote: ({ children }) => (
+                                                                    <blockquote className="border-l-4 border-[#eb6a48] pl-4 italic my-2 text-black/70">
+                                                                        {children}
+                                                                    </blockquote>
+                                                                ),
+                                                                code: ({ children }) => (
+                                                                    <code className="bg-black/10 px-1.5 py-0.5 rounded text-[#eb6a48] text-sm">
+                                                                        {children}
+                                                                    </code>
+                                                                ),
+                                                                p: ({ children }) => (
+                                                                    <p className="text-sm leading-relaxed mb-2 last:mb-0 whitespace-pre-wrap">{children}</p>
+                                                                ),
+                                                            }}
+                                                        >
+                                                            {message.content}
+                                                        </ReactMarkdown>
+                                                    )}
                                                 </div>
                                                 
                                                 {/* Share button for assistant messages */}
@@ -1299,7 +1348,54 @@ export function AnimatedAIChat({ onUploadClick, uploadedBook, onRemoveBook, curr
                                                     : 'bg-[#f7f7f7] text-black rounded-bl-md'
                                             )}
                                         >
-                                            <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
+                                            {isUserMessage ? (
+                                                <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
+                                            ) : (
+                                                <ReactMarkdown
+                                                    remarkPlugins={[remarkGfm]}
+                                                    components={{
+                                                        strong: ({ children }) => (
+                                                            <strong className="font-bold text-black">{children}</strong>
+                                                        ),
+                                                        em: ({ children }) => (
+                                                            <em className="italic text-black/80">{children}</em>
+                                                        ),
+                                                        ul: ({ children }) => (
+                                                            <ul className="list-disc list-inside mb-3 space-y-1">{children}</ul>
+                                                        ),
+                                                        ol: ({ children }) => (
+                                                            <ol className="list-decimal list-inside mb-3 space-y-1">{children}</ol>
+                                                        ),
+                                                        li: ({ children }) => (
+                                                            <li className="ml-2">{children}</li>
+                                                        ),
+                                                        h1: ({ children }) => (
+                                                            <h1 className="text-lg font-bold text-black mb-2 mt-3">{children}</h1>
+                                                        ),
+                                                        h2: ({ children }) => (
+                                                            <h2 className="text-base font-bold text-black mb-2 mt-2">{children}</h2>
+                                                        ),
+                                                        h3: ({ children }) => (
+                                                            <h3 className="text-sm font-bold text-black mb-1 mt-2">{children}</h3>
+                                                        ),
+                                                        blockquote: ({ children }) => (
+                                                            <blockquote className="border-l-4 border-[#eb6a48] pl-4 italic my-2 text-black/70">
+                                                                {children}
+                                                            </blockquote>
+                                                        ),
+                                                        code: ({ children }) => (
+                                                            <code className="bg-black/10 px-1.5 py-0.5 rounded text-[#eb6a48] text-sm">
+                                                                {children}
+                                                            </code>
+                                                        ),
+                                                        p: ({ children }) => (
+                                                            <p className="text-sm leading-relaxed mb-2 last:mb-0 whitespace-pre-wrap">{children}</p>
+                                                        ),
+                                                    }}
+                                                >
+                                                    {message.content}
+                                                </ReactMarkdown>
+                                            )}
                                         </div>
                                         
                                         {/* Share button for assistant messages */}

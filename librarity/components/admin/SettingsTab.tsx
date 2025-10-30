@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Settings as SettingsIcon, Tag, Plus, Trash2, ToggleLeft, ToggleRight, Copy, X, Server, Database, Zap, HardDrive, Shield, Cpu } from "lucide-react";
-import { api } from "@/lib/api";
+import api from "@/lib/api";
 
 interface PromoCode {
   id: string;

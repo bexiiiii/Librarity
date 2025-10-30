@@ -16,7 +16,7 @@ import {
   Activity,
   Globe,
 } from "lucide-react";
-import { api } from "@/lib/api";
+import api from "@/lib/api";
 
 interface StartupMetrics {
   // User Metrics

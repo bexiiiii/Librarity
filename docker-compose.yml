@@ -50,6 +50,25 @@ services:
       timeout: 5s
       retries: 5
 
+  # MinIO Object Storage (Local - optional if using external)
+  # minio:
+  #   image: minio/minio:latest
+  #   container_name: librarity_minio
+  #   command: server /data --console-address ":9001"
+  #   ports:
+  #     - "9000:9000"
+  #     - "9001:9001"
+  #   environment:
+  #     MINIO_ROOT_USER: minioadmin
+  #     MINIO_ROOT_PASSWORD: minioadmin
+  #   volumes:
+  #     - minio_data:/data
+  #   healthcheck:
+  #     test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+  #     interval: 30s
+  #     timeout: 20s
+  #     retries: 3
+
   # FastAPI Backend
   backend:
     build:
@@ -64,6 +83,11 @@ services:
       DATABASE_URL: postgresql+asyncpg://librarity:password@postgres:5432/librarity
       REDIS_URL: redis://redis:6379/0
       QDRANT_URL: http://qdrant:6333
+      MINIO_ENDPOINT: api.euroline.storage.1edu.kz
+      MINIO_ACCESS_KEY: admin
+      MINIO_SECRET_KEY: admin12345
+      MINIO_BUCKET_NAME: librarityl
+      MINIO_USE_SSL: "true"
       CELERY_BROKER_URL: redis://redis:6379/1
       CELERY_RESULT_BACKEND: redis://redis:6379/2
     volumes:
@@ -76,6 +100,8 @@ services:
         condition: service_healthy
       qdrant:
         condition: service_healthy
+      # minio:
+      #   condition: service_healthy
     command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 
   # Celery Worker
@@ -141,6 +167,7 @@ volumes:
   postgres_data:
   redis_data:
   qdrant_data:
+  minio_data:
   book_uploads:
 
 networks:

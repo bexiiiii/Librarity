@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { DollarSign, CreditCard, TrendingUp, Users, Calendar } from "lucide-react";
-import { api } from "@/lib/api";
+import api from "@/lib/api";
 
 interface Payment {
   id: string;

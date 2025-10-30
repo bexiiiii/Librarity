@@ -10,10 +10,14 @@ import PyPDF2
 import ebooklib
 from ebooklib import epub
 from bs4 import BeautifulSoup
+import os
+import tempfile
+import asyncio
 
 from core.config import settings
 from models.book import Book
 from services.langchain_service import rag_pipeline
+from services.minio_service import minio_service
 
 logger = structlog.get_logger()
 
@@ -21,6 +25,35 @@ logger = structlog.get_logger()
 sync_db_url = settings.DATABASE_URL.replace("+asyncpg", "")
 engine = create_engine(sync_db_url)
 SessionLocal = sessionmaker(bind=engine)
+
+
+def download_book_from_minio(object_path: str) -> str:
+    """
+    Download book from MinIO to temporary file
+    Returns path to temporary file
+    """
+    try:
+        # Download file data from MinIO synchronously
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        file_data = loop.run_until_complete(minio_service.download_file(object_path))
+        loop.close()
+        
+        # Create temporary file
+        suffix = os.path.splitext(object_path)[1]
+        temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=suffix)
+        temp_file.write(file_data)
+        temp_file.close()
+        
+        logger.info("book_downloaded_from_minio", 
+                   object_path=object_path,
+                   temp_path=temp_file.name)
+        
+        return temp_file.name
+        
+    except Exception as e:
+        logger.error("minio_download_failed", error=str(e), object_path=object_path)
+        raise
 
 
 @celery_app.task(bind=True, max_retries=3)
@@ -31,6 +64,7 @@ def process_book_task(self, book_id: str):
     
     db = SessionLocal()
     book = None
+    temp_file_path = None
     
     try:
         # Get book from database
@@ -47,12 +81,16 @@ def process_book_task(self, book_id: str):
         book.processing_status = "processing"
         db.commit()
         
+        # Download file from MinIO to temporary location
+        temp_file_path = download_book_from_minio(book.file_path)
+        file_path = temp_file_path
+        
         # Extract metadata first
         file_metadata = {}
         if book.file_type == "epub":
-            file_metadata = extract_epub_metadata(book.file_path)
+            file_metadata = extract_epub_metadata(file_path)
         elif book.file_type == "pdf":
-            file_metadata = extract_pdf_metadata(book.file_path)
+            file_metadata = extract_pdf_metadata(file_path)
         
         # Update book with extracted metadata if not already set
         if file_metadata.get('author') and not book.author:
@@ -67,11 +105,11 @@ def process_book_task(self, book_id: str):
         
         # Extract text based on file type
         if book.file_type == "pdf":
-            text = extract_text_from_pdf(book.file_path)
+            text = extract_text_from_pdf(file_path)
         elif book.file_type == "epub":
-            text = extract_text_from_epub(book.file_path)
+            text = extract_text_from_epub(file_path)
         elif book.file_type == "txt":
-            with open(book.file_path, "r", encoding="utf-8") as f:
+            with open(file_path, "r", encoding="utf-8") as f:
                 text = f.read()
         else:
             raise ValueError(f"Unsupported file type: {book.file_type}")
@@ -116,6 +154,14 @@ def process_book_task(self, book_id: str):
         
         db.commit()
         
+        # Clean up temporary file
+        if temp_file_path and os.path.exists(temp_file_path):
+            try:
+                os.remove(temp_file_path)
+                logger.info("temp_file_cleaned", temp_path=temp_file_path)
+            except Exception as e:
+                logger.warning("temp_file_cleanup_failed", error=str(e))
+        
         logger.info(
             "book_processing_completed",
             book_id=book_id,
@@ -131,6 +177,13 @@ def process_book_task(self, book_id: str):
         
     except Exception as e:
         logger.error("book_processing_failed", book_id=book_id, error=str(e))
+        
+        # Clean up temporary file on error
+        if temp_file_path and os.path.exists(temp_file_path):
+            try:
+                os.remove(temp_file_path)
+            except Exception:
+                pass
         
         # Update book with error
         if book:

@@ -150,6 +150,15 @@ async def get_chat_history(
     )
     chats = result.scalars().all()
     
+    if not chats:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Chat session not found"
+        )
+    
+    # Get book_id from the first chat
+    book_id = chats[0].book_id if chats else None
+    
     # Transform each chat into TWO messages: user message + AI response
     messages = []
     for chat in chats:
@@ -169,7 +178,8 @@ async def get_chat_history(
     return {
         "messages": messages,
         "total": len(messages),
-        "session_id": session_id
+        "session_id": session_id,
+        "book_id": book_id
     }
 
 

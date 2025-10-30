@@ -149,6 +149,7 @@ class ChatHistoryMessages(BaseModel):
     messages: List[ChatMessage]
     total: int
     session_id: UUID4
+    book_id: Optional[UUID4] = None
 
 
 # ============= Subscription Schemas =============

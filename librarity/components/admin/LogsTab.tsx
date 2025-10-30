@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { FileText, AlertCircle, Info, Shield, Activity } from "lucide-react";
-import { api } from "@/lib/api";
+import api from "@/lib/api";
 
 interface LogEntry {
   id: string;
