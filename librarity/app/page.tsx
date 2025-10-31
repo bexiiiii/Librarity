@@ -110,14 +110,21 @@ export default function Home() {
 
     const handleFocusIn = (e: FocusEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
-        // Небольшая задержка чтобы клавиатура успела открыться
+        // Delay to allow keyboard to open first
         setTimeout(() => {
-          // Только скроллим чат вниз, не трогаем input
-          if (messagesEndRef.current) {
-            const chatContainer = messagesEndRef.current.closest('.overflow-y-auto');
-            if (chatContainer) {
-              chatContainer.scrollTop = chatContainer.scrollHeight;
-            }
+          updateViewportMetrics();
+          
+          // Scroll chat container to bottom, not the input
+          const chatContainer = document.querySelector('.overflow-y-auto');
+          if (chatContainer) {
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+          }
+          
+          // On iOS Safari, ensure input stays visible
+          if (/iPhone|iPad|iPod/.test(navigator.userAgent)) {
+            requestAnimationFrame(() => {
+              (e.target as HTMLElement).scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            });
           }
         }, 100);
       }
@@ -491,7 +498,11 @@ export default function Home() {
   return (
     <div
       className="flex bg-[#11101d] md:h-screen md:overflow-hidden"
-      style={{ minHeight: 'var(--viewport-height, 100dvh)', height: 'var(--viewport-height, 100dvh)' }}
+      style={{ 
+        minHeight: '100dvh',
+        height: '100dvh',
+        maxHeight: '-webkit-fill-available'
+      }}
     >
       {/* Mobile Menu Overlay */}
       {isMobileMenuOpen && (
@@ -763,8 +774,12 @@ export default function Home() {
           <div className="flex-1 flex flex-col md:overflow-hidden min-h-0">
             {/* Messages */}
             <div
-              className="flex-1 min-h-0 overflow-y-auto p-6 space-y-3 max-w-5xl mx-auto w-full pb-safe"
-              style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 7rem + var(--keyboard-offset, 0px))' }}
+              className="flex-1 min-h-0 overflow-y-auto p-6 space-y-3 max-w-5xl mx-auto w-full"
+              style={{ 
+                paddingBottom: 'calc(180px + env(safe-area-inset-bottom, 0px))',
+                WebkitOverflowScrolling: 'touch',
+                overscrollBehavior: 'contain'
+              }}
             >
               {messages.length === 0 && !isProcessing ? (
                 /* Welcome message when book is ready */
@@ -868,17 +883,15 @@ export default function Home() {
               <div ref={messagesEndRef} />
             </div>
 
-            {/* Input Area - Fixed at bottom */}
+            {/* Input Area - Fixed at bottom on mobile, static on desktop */}
             <div
               className="fixed inset-x-0 bottom-0 z-40 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/80 md:static md:flex-shrink-0 md:bg-white md:backdrop-blur-none"
+              style={{
+                paddingBottom: 'max(env(safe-area-inset-bottom), 0px)',
+              }}
             >
               <div
-                className="max-w-5xl mx-auto w-full border-t border-gray-100 transition-[padding-bottom] duration-200 ease-out"
-                style={{
-                  paddingBottom: isKeyboardOpen
-                    ? 'calc(env(safe-area-inset-bottom) + 0.5rem)'
-                    : 'calc(env(safe-area-inset-bottom) + 1rem)',
-                }}
+                className="max-w-5xl mx-auto w-full border-t border-gray-100"
               >
                 <div className="p-3 md:p-4">
               {isProcessing ? (

@@ -47,8 +47,10 @@
 :root {
   --radius: 0.625rem;
   --viewport-height: 100vh;
+  --viewport-height-dynamic: 100dvh;
   --min-chat-height: 200px;
   --keyboard-offset: 0px;
+  --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
@@ -172,12 +174,20 @@
     /* Prevent text size adjustment on orientation change */
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
+    /* Use dynamic viewport height */
+    height: 100dvh;
+    height: -webkit-fill-available;
   }
   
   body {
     overflow-x: hidden;
     /* Prevent rubber band scrolling on iOS */
     overscroll-behavior-y: none;
+    height: 100dvh;
+    height: -webkit-fill-available;
+    /* Fix for Safari mobile viewport */
+    position: fixed;
+    width: 100%;
   }
 
   /* Smooth scrolling for chat messages */
@@ -189,6 +199,69 @@
   /* Prevent zoom on input focus */
   input, textarea, select {
     font-size: 16px !important;
+  }
+  
+  /* Fix input field positioning on keyboard open */
+  .chat-input-container {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    background: white;
+    padding-bottom: env(safe-area-inset-bottom, 0);
+  }
+  
+  /* Prevent viewport jumping when keyboard opens */
+  .chat-messages-container {
+    padding-bottom: calc(120px + env(safe-area-inset-bottom, 0));
+    scroll-behavior: smooth;
+  }
+}
+
+/* iOS Safari specific fixes */
+@supports (-webkit-touch-callout: none) {
+  :root {
+    /* Use visual viewport for iOS */
+    --viewport-height: calc(var(--vvh, 1vh) * 100);
+  }
+  
+  body {
+    /* Fixes for iOS Safari */
+    min-height: -webkit-fill-available;
+    /* Prevent body from moving when keyboard opens */
+    position: relative;
+  }
+  
+  .main-container {
+    min-height: -webkit-fill-available;
+  }
+  
+  /* Fix input field on iOS */
+  input[type="text"],
+  textarea {
+    /* Prevent zoom on focus */
+    font-size: 16px !important;
+    /* Smooth transition */
+    transition: none !important;
+  }
+  
+  /* Keep input at bottom when keyboard opens */
+  .chat-input-wrapper {
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    z-index: 1000 !important;
+    transform: translate3d(0, 0, 0) !important;
+    will-change: transform !important;
+  }
+  
+  /* Ensure proper scrolling on iOS */
+  .chat-messages-scroll {
+    -webkit-overflow-scrolling: touch !important;
+    overflow-y: auto !important;
+    overscroll-behavior-y: contain !important;
   }
 }
 

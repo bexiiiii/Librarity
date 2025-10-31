@@ -139,7 +139,33 @@ export default function RootLayout({
   return (
      <html lang="en"  suppressHydrationWarning>
       <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                function setViewportHeight() {
+                  const vh = window.innerHeight * 0.01;
+                  document.documentElement.style.setProperty('--vh', vh + 'px');
+                  
+                  // Handle visualViewport for better mobile support
+                  if (window.visualViewport) {
+                    const vvh = window.visualViewport.height * 0.01;
+                    document.documentElement.style.setProperty('--vvh', vvh + 'px');
+                  }
+                }
+                
+                setViewportHeight();
+                window.addEventListener('resize', setViewportHeight);
+                if (window.visualViewport) {
+                  window.visualViewport.addEventListener('resize', setViewportHeight);
+                }
+              })();
+            `
+          }}
+        />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
