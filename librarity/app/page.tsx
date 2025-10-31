@@ -82,21 +82,29 @@ export default function Home() {
     if (typeof window === 'undefined') return;
 
     const updateViewportMetrics = () => {
-      const viewport = window.visualViewport;
-      const rawHeight = viewport ? viewport.height : window.innerHeight;
-      const offsetTop = viewport ? viewport.offsetTop : 0;
-      const minChatHeight = Math.max(rawHeight * 0.4, 200);
+      if (typeof window === 'undefined' || typeof document === 'undefined') {
+        return;
+      }
 
-      document.documentElement.style.setProperty('--viewport-height', `${rawHeight}px`);
-      document.documentElement.style.setProperty('--min-chat-height', `${minChatHeight}px`);
+      try {
+        const viewport = window.visualViewport;
+        const rawHeight = viewport?.height ?? window.innerHeight;
+        const offsetTop = viewport?.offsetTop ?? 0;
+        const minChatHeight = Math.max(rawHeight * 0.4, 200);
 
-      const keyboardHeight = Math.max(0, window.innerHeight - (rawHeight + offsetTop));
-      document.documentElement.style.setProperty('--keyboard-offset', `${keyboardHeight}px`);
+        document.documentElement.style.setProperty('--viewport-height', `${rawHeight}px`);
+        document.documentElement.style.setProperty('--min-chat-height', `${minChatHeight}px`);
 
-      const isOpen = keyboardHeight > 80;
-      if (keyboardStateRef.current !== isOpen) {
-        keyboardStateRef.current = isOpen;
-        setIsKeyboardOpen(isOpen);
+        const keyboardHeight = Math.max(0, window.innerHeight - (rawHeight + offsetTop));
+        document.documentElement.style.setProperty('--keyboard-offset', `${keyboardHeight}px`);
+
+        const isOpen = keyboardHeight > 80;
+        if (keyboardStateRef.current !== isOpen) {
+          keyboardStateRef.current = isOpen;
+          setIsKeyboardOpen(isOpen);
+        }
+      } catch (error) {
+        console.error('Failed to update viewport metrics', error);
       }
     };
 
@@ -115,11 +123,16 @@ export default function Home() {
       }
     };
 
-    if (window.visualViewport) {
-      window.visualViewport.addEventListener('resize', updateViewportMetrics);
-      window.visualViewport.addEventListener('scroll', updateViewportMetrics);
+    try {
+      if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', updateViewportMetrics);
+        window.visualViewport.addEventListener('scroll', updateViewportMetrics);
+      }
+      window.addEventListener('resize', updateViewportMetrics);
+    } catch (error) {
+      console.error('Failed to attach viewport listeners', error);
     }
-    window.addEventListener('resize', updateViewportMetrics);
+
     window.addEventListener('focusin', handleFocusIn);
 
     // Initial setup
@@ -749,7 +762,10 @@ export default function Home() {
         {uploadedBook ? (
           <div className="flex-1 flex flex-col md:overflow-hidden min-h-0">
             {/* Messages */}
-            <div className="flex-1 min-h-0 overflow-y-auto p-6 space-y-3 max-w-5xl mx-auto w-full pb-safe">
+            <div
+              className="flex-1 min-h-0 overflow-y-auto p-6 space-y-3 max-w-5xl mx-auto w-full pb-safe"
+              style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 7rem + var(--keyboard-offset, 0px))' }}
+            >
               {messages.length === 0 && !isProcessing ? (
                 /* Welcome message when book is ready */
                 <div className="flex flex-col items-center justify-center h-full text-center">
@@ -854,13 +870,17 @@ export default function Home() {
 
             {/* Input Area - Fixed at bottom */}
             <div
-              className="flex-shrink-0 p-3 md:p-4 border-t border-gray-100 max-w-5xl mx-auto w-full bg-white transition-[padding-bottom] duration-200 ease-out"
-              style={{
-                paddingBottom: isKeyboardOpen
-                  ? 'calc(env(safe-area-inset-bottom) + 0.5rem)'
-                  : 'max(1.5rem, calc(env(safe-area-inset-bottom) + 0.75rem))',
-              }}
+              className="fixed inset-x-0 bottom-0 z-40 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/80 md:static md:flex-shrink-0 md:bg-white md:backdrop-blur-none"
             >
+              <div
+                className="max-w-5xl mx-auto w-full border-t border-gray-100 transition-[padding-bottom] duration-200 ease-out"
+                style={{
+                  paddingBottom: isKeyboardOpen
+                    ? 'calc(env(safe-area-inset-bottom) + 0.5rem)'
+                    : 'calc(env(safe-area-inset-bottom) + 1rem)',
+                }}
+              >
+                <div className="p-3 md:p-4">
               {isProcessing ? (
                 <div className="mb-3 flex items-center justify-center gap-2 text-sm text-gray-600 bg-pink-50 py-2 px-4 rounded-lg">
                   <svg
@@ -1085,6 +1105,8 @@ export default function Home() {
                   Librarity might make mistakes
                 </p>
               )}
+                </div>
+              </div>
             </div>
           </div>
         ) : (
