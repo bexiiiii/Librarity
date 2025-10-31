@@ -82,7 +82,10 @@ export default function Home() {
       // Обнаруживаем открытие клавиатуры на мобильных устройствах
       if (window.visualViewport) {
         const viewportHeight = window.visualViewport.height;
+        // Минимальная высота для чата - 40% от экрана даже когда клавиатура открыта
+        const minChatHeight = Math.max(viewportHeight * 0.4, 200);
         document.documentElement.style.setProperty('--viewport-height', `${viewportHeight}px`);
+        document.documentElement.style.setProperty('--min-chat-height', `${minChatHeight}px`);
       }
     };
 
@@ -685,9 +688,9 @@ export default function Home() {
 
         {/* Chat Area or Upload Area */}
         {uploadedBook ? (
-          <div className="flex-1 flex flex-col min-h-0" style={{ maxHeight: 'var(--viewport-height, 100dvh)' }}>
+          <div className="flex-1 flex flex-col" style={{ minHeight: 0, height: 'var(--viewport-height, 100dvh)' }}>
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-6 space-y-3 max-w-5xl mx-auto w-full">
+            <div className="flex-1 overflow-y-auto p-6 space-y-3 max-w-5xl mx-auto w-full" style={{ minHeight: 0 }}>
               {messages.length === 0 && !isProcessing ? (
                 /* Welcome message when book is ready */
                 <div className="flex flex-col items-center justify-center h-full text-center">
@@ -772,7 +775,7 @@ export default function Home() {
             </div>
 
             {/* Input Area - Fixed at bottom */}
-            <div className="flex-shrink-0 p-3 md:p-4 pb-6 border-t border-gray-100 max-w-5xl mx-auto w-full" style={{ paddingBottom: 'max(1.5rem, calc(env(safe-area-inset-bottom) + 0.75rem))' }}>
+            <div className="flex-shrink-0 p-3 md:p-4 pb-6 border-t border-gray-100 max-w-5xl mx-auto w-full bg-white" style={{ paddingBottom: 'max(1.5rem, calc(env(safe-area-inset-bottom) + 0.75rem))' }}>
               {isProcessing ? (
                 <div className="mb-3 flex items-center justify-center gap-2 text-sm text-gray-600 bg-pink-50 py-2 px-4 rounded-lg">
                   <svg
