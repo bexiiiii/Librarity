@@ -726,9 +726,9 @@ export default function Home() {
 
         {/* Chat Area or Upload Area */}
         {uploadedBook ? (
-          <div className="flex-1 flex flex-col overflow-hidden">
+          <div className="flex-1 flex flex-col overflow-hidden" style={{ height: '100%', maxHeight: '100%' }}>
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-6 space-y-3 max-w-5xl mx-auto w-full">
+            <div className="flex-1 overflow-y-auto p-6 space-y-3 max-w-5xl mx-auto w-full" style={{ minHeight: 0 }}>
               {messages.length === 0 && !isProcessing ? (
                 /* Welcome message when book is ready */
                 <div className="flex flex-col items-center justify-center h-full text-center">
