@@ -434,16 +434,125 @@ class PolarService:
         db: AsyncSession,
         data: Dict[str, Any]
     ) -> None:
-        """Handle order creation"""
+        """Handle order creation - create/upgrade subscription"""
         order_id = data.get("id")
         customer_email = data.get("customer_email")
         amount = data.get("amount", 0)
+        product_id = data.get("product_id")
+        product = data.get("product", {})
+        product_name = product.get("name", "").lower() if product else ""
         
         logger.info(
             "polar_order_created",
             order_id=order_id,
             customer_email=customer_email,
-            amount=amount
+            amount=amount,
+            product_name=product_name
+        )
+        
+        # Если нет email, пытаемся получить из subscription или user_id
+        if not customer_email:
+            logger.warning("order_without_customer_email", order_id=order_id)
+            # Попробуем найти через subscription_id если есть
+            subscription_id = data.get("subscription_id")
+            if subscription_id:
+                result = await db.execute(
+                    select(Subscription).where(
+                        Subscription.polar_subscription_id == subscription_id
+                    )
+                )
+                existing_sub = result.scalar_one_or_none()
+                if existing_sub:
+                    result = await db.execute(
+                        select(User).where(User.id == existing_sub.user_id)
+                    )
+                    user = result.scalar_one_or_none()
+                    if user:
+                        customer_email = user.email
+        
+        if not customer_email:
+            logger.error("cannot_process_order_no_email", order_id=order_id)
+            return
+        
+        # Find user by email
+        result = await db.execute(
+            select(User).where(User.email == customer_email)
+        )
+        user = result.scalar_one_or_none()
+        
+        if not user:
+            logger.error("user_not_found_for_order", email=customer_email)
+            return
+        
+        # Determine tier from product name or product_id
+        tier = SubscriptionTier.FREE
+        if "pro" in product_name:
+            tier = SubscriptionTier.PRO
+        elif "ultimate" in product_name:
+            tier = SubscriptionTier.ULTIMATE
+        else:
+            # Fallback: try to get from product_id
+            tier = self._get_tier_from_product(product_id)
+        
+        # Get or create subscription
+        result = await db.execute(
+            select(Subscription).where(Subscription.user_id == user.id)
+        )
+        subscription = result.scalar_one_or_none()
+        
+        if not subscription:
+            subscription = Subscription(user_id=user.id)
+            db.add(subscription)
+        
+        # Update subscription
+        subscription.tier = tier
+        subscription.status = SubscriptionStatus.ACTIVE
+        subscription.polar_product_id = product_id
+        subscription.token_limit = settings.token_limit_by_tier[tier.value]
+        subscription.tokens_used = 0  # Reset tokens on new subscription
+        subscription.current_period_start = datetime.utcnow()
+        subscription.current_period_end = datetime.utcnow() + timedelta(days=30)
+        subscription.tokens_reset_at = datetime.utcnow() + timedelta(days=30)
+        
+        # Set features based on tier
+        if tier == SubscriptionTier.PRO:
+            subscription.max_books = 20
+            subscription.has_citation_mode = True
+            subscription.has_coach_mode = True
+            subscription.price = amount / 100 if amount else 9.0
+        elif tier == SubscriptionTier.ULTIMATE:
+            subscription.max_books = 999
+            subscription.has_citation_mode = True
+            subscription.has_author_mode = True
+            subscription.has_coach_mode = True
+            subscription.has_analytics = True
+            subscription.price = amount / 100 if amount else 19.0
+        
+        await db.commit()
+        
+        # Create payment record
+        payment = Payment(
+            user_id=user.id,
+            subscription_id=subscription.id,
+            amount=amount / 100 if amount else 0,
+            currency="USD",
+            status=PaymentStatus.COMPLETED,
+            payment_method=PaymentMethod.POLAR,
+            external_payment_id=order_id,
+            metadata={
+                "tier": tier.value,
+                "product_name": product_name,
+                "sandbox": self.sandbox_mode
+            }
+        )
+        db.add(payment)
+        await db.commit()
+        
+        logger.info(
+            "subscription_created_from_order",
+            user_id=str(user.id),
+            tier=tier.value,
+            order_id=order_id
         )
     
     async def _handle_payment_succeeded(
