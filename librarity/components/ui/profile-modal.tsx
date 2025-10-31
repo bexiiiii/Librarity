@@ -436,7 +436,7 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
                             onClick={handleApplyPromoCode}
-                            className="w-full px-6 py-4 bg-[#ff4ba8] text-white font-semibold rounded-2xl hover:bg-[#d85a38] transition-colors text-lg"
+                            className="w-full px-6 py-4 bg-[#ff4ba8] text-white font-semibold rounded-2xl hover:bg-[#ff0084] transition-colors text-lg"
                           >
                             Apply Code
                           </motion.button>
@@ -524,13 +524,13 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                                     <svg className="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
                                       <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
                                     </svg>
-                                    1 Book
+                                    3 Books
                                   </li>
                                   <li className="flex items-center gap-2 text-gray-300">
                                     <svg className="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
                                       <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
                                     </svg>
-                                    10,000 Tokens/month
+                                    30,000 Tokens/month
                                   </li>
                                   <li className="flex items-center gap-2 text-gray-300">
                                     <svg className="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
@@ -597,7 +597,7 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                                     <svg className="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
                                       <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
                                     </svg>
-                                    100,000 Tokens/month
+                                    200,000 Tokens/month
                                   </li>
                                   <li className="flex items-center gap-2 text-gray-300">
                                     <svg className="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
@@ -706,13 +706,7 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                             <div className="bg-[#27272a] rounded-3xl p-6">
                               <div className="flex items-center justify-between mb-6">
                                 <h2 className="text-2xl font-bold text-white">Credits</h2>
-                                <motion.button
-                                  whileHover={{ scale: 1.05 }}
-                                  whileTap={{ scale: 0.95 }}
-                                  className="px-6 py-3 bg-[#ff4ba8] text-white font-semibold rounded-xl hover:bg-[#d85a38] transition-colors"
-                                >
-                                  Buy credits
-                                </motion.button>
+                                
                               </div>
 
                               <div className="space-y-4">

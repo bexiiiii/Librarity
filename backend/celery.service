@@ -3,21 +3,18 @@ Description=Celery Worker Service for Librarity
 After=network.target redis.target
 
 [Service]
-Type=forking
-User=www-data
-Group=www-data
-WorkingDirectory=/var/www/librarity/backend
-Environment="PATH=/var/www/librarity/backend/venv/bin"
-ExecStart=/var/www/librarity/backend/venv/bin/celery -A workers.celery_app worker \
-    --loglevel=info \
-    --pool=solo \
-    --concurrency=1 \
-    --logfile=/var/log/celery/worker.log \
-    --pidfile=/var/run/celery/worker.pid \
-    --detach
+Type=simple
+User=root
+Group=root
+WorkingDirectory=/root/Librarity/backend
+Environment="PATH=/root/Librarity/backend/venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+Environment="VIRTUAL_ENV=/root/Librarity/backend/venv"
+Environment="PYTHONPATH=/root/Librarity/backend"
+ExecStart=/root/Librarity/backend/venv/bin/python -m celery -A workers.celery_app worker --loglevel=info --pool=solo --concurrency=1
 
-ExecStop=/var/www/librarity/backend/venv/bin/celery -A workers.celery_app control shutdown
-ExecReload=/var/www/librarity/backend/venv/bin/celery -A workers.celery_app control reload
+ExecStop=/bin/kill -s TERM $MAINPID
+StandardOutput=journal
+StandardError=journal
 
 # Restart policy
 Restart=always

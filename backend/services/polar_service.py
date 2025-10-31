@@ -226,6 +226,7 @@ class PolarService:
             "subscription.cancelled": self._handle_subscription_cancelled,
             "subscription.revoked": self._handle_subscription_revoked,
             "order.created": self._handle_order_created,
+            "order.paid": self._handle_order_created,  # Same as order.created - create subscription
             "payment.succeeded": self._handle_payment_succeeded,
             "payment.failed": self._handle_payment_failed,
         }

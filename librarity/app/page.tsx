@@ -402,7 +402,7 @@ export default function Home() {
         {/* Logo */}
         <div className="pt-6 px-5 mb-6">
           <div className="flex items-center gap-2.5">
-            <Image src="/book 1.png" alt="Librarity Logo" width={64} height={64} />
+            <Image src="/book 1.png" alt="Librarity Logo" width={40} height={40} />
             <h1 className="text-white text-2xl font-semibold">
               Librarity
             </h1>
@@ -591,7 +591,7 @@ export default function Home() {
 
           {/* Desktop: Logo on left */}
           <div className="hidden md:flex items-center gap-2">
-            <Image src="/book 1.png" alt="Librarity Logo" width={32} height={32} />
+            <Image src="/book 1.png" alt="Librarity Logo" width={40} height={40} />
             <h1 className="text-gray-900 text-xl font-semibold">
               Librarity
             </h1>
@@ -949,7 +949,32 @@ export default function Home() {
           </div>
         ) : (
           /* Upload Area */
-          <div className="flex-1 flex items-center justify-center p-4 md:p-6">
+          <div className="flex-1 flex flex-col items-center justify-center p-4 md:p-6 gap-6">
+            {/* Welcome Message */}
+            <div className="text-center max-w-3xl">
+              <h1 className="text-3xl md:text-4xl font-bold text-gray-800 mb-4">
+                Welcome to Librarity! 📚
+              </h1>
+              <p className="text-gray-600 text-base md:text-lg mb-6">
+                Transform your reading experience with AI. Upload any book and chat with it in <br /> <b>4 intelligent modes:</b>
+              </p>
+              <div className="flex flex-wrap justify-center gap-2">
+                <span className="px-4 py-2 bg-[#11101d] text-white rounded-full font-medium text-sm">
+                  📖 Book Brain
+                </span>
+                <span className="px-4 py-2 bg-[#11101d] text-white rounded-full font-medium text-sm">
+                  ✍️ Author Mode
+                </span>
+                <span className="px-4 py-2 bg-[#11101d] text-white rounded-full font-medium text-sm">
+                  🎯 Coach Mode
+                </span>
+                <span className="px-4 py-2 bg-[#11101d] text-white rounded-full font-medium text-sm">
+                  📝 With Citations
+                </span>
+              </div>
+            </div>
+
+            {/* Upload Box */}
             <div
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
