@@ -67,9 +67,53 @@ export default function Home() {
   });
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     loadUserData();
+  }, []);
+
+  // Mobile keyboard handling - adjust layout when keyboard opens
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const handleResize = () => {
+      // Обнаруживаем открытие клавиатуры на мобильных устройствах
+      if (window.visualViewport) {
+        const viewportHeight = window.visualViewport.height;
+        document.documentElement.style.setProperty('--viewport-height', `${viewportHeight}px`);
+      }
+    };
+
+    const handleFocusIn = (e: FocusEvent) => {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+        // Небольшая задержка чтобы клавиатура успела открыться
+        setTimeout(() => {
+          // Скроллим к концу сообщений
+          messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+          // Скроллим input в видимую область
+          if (inputRef.current) {
+            inputRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        }, 300);
+      }
+    };
+
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', handleResize);
+    }
+    window.addEventListener('focusin', handleFocusIn);
+    
+    // Initial setup
+    handleResize();
+
+    return () => {
+      if (window.visualViewport) {
+        window.visualViewport.removeEventListener('resize', handleResize);
+      }
+      window.removeEventListener('focusin', handleFocusIn);
+    };
   }, []);
 
   // Save chat mode to localStorage
@@ -376,7 +420,7 @@ export default function Home() {
   );
 
   return (
-    <div className="flex min-h-[100dvh] bg-[#11101d]">
+    <div className="flex bg-[#11101d]" style={{ minHeight: 'var(--viewport-height, 100dvh)' }}>
       {/* Mobile Menu Overlay */}
       {isMobileMenuOpen && (
         <div 
@@ -640,7 +684,7 @@ export default function Home() {
 
         {/* Chat Area or Upload Area */}
         {uploadedBook ? (
-          <div className="flex-1 flex flex-col min-h-0 max-h-[100dvh]">
+          <div className="flex-1 flex flex-col min-h-0" style={{ maxHeight: 'var(--viewport-height, 100dvh)' }}>
             {/* Messages */}
             <div className="flex-1 overflow-y-auto p-6 space-y-3 max-w-5xl mx-auto w-full">
               {messages.length === 0 && !isProcessing ? (
@@ -727,7 +771,7 @@ export default function Home() {
             </div>
 
             {/* Input Area - Fixed at bottom */}
-            <div className="flex-shrink-0 p-3 md:p-4 border-t border-gray-100 max-w-5xl mx-auto w-full" style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom))' }}>
+            <div className="flex-shrink-0 p-3 md:p-4 pb-6 border-t border-gray-100 max-w-5xl mx-auto w-full" style={{ paddingBottom: 'max(1.5rem, calc(env(safe-area-inset-bottom) + 0.75rem))' }}>
               {isProcessing ? (
                 <div className="mb-3 flex items-center justify-center gap-2 text-sm text-gray-600 bg-pink-50 py-2 px-4 rounded-lg">
                   <svg
@@ -920,14 +964,11 @@ export default function Home() {
                 </div>
 
                 <input
+                  ref={inputRef}
                   type="text"
                   value={inputMessage}
                   onChange={(e) => setInputMessage(e.target.value)}
                   onKeyPress={(e) => e.key === "Enter" && !isProcessing && handleSendMessage()}
-                  onFocus={() => {
-                    // Small delay so mobile keyboard opens and then we scroll the messages into view
-                    setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' }), 300);
-                  }}
                   placeholder={isProcessing ? "Ждем завершения обработки..." : "Ask from book ....."}
                   disabled={isProcessing}
                   className="w-full h-12 md:h-13 bg-[#f7f7f7] border border-black/20 rounded-[23px] pl-12 md:pl-4 pr-12 text-sm outline-none focus:ring-2 focus:ring-pink-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"

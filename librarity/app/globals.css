@@ -46,6 +46,7 @@
 
 :root {
   --radius: 0.625rem;
+  --viewport-height: 100vh;
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
@@ -164,22 +165,39 @@
 @media (max-width: 768px) {
   html {
     font-size: 14px;
+    /* Smooth scrolling for mobile */
+    -webkit-overflow-scrolling: touch;
   }
   
   body {
     overflow-x: hidden;
+    /* Prevent rubber band scrolling on iOS */
+    overscroll-behavior-y: none;
+  }
+
+  /* Smooth scrolling for chat messages */
+  .overflow-y-auto {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
   }
 }
 
 /* Prevent body scroll when sidebar is open on mobile */
 body.sidebar-open {
   overflow: hidden;
+  position: fixed;
+  width: 100%;
 }
 
 /* Touch friendly buttons on mobile */
 @media (hover: none) and (pointer: coarse) {
   button, a {
     -webkit-tap-highlight-color: transparent;
+  }
+  
+  /* Better touch targets on mobile */
+  input, textarea, button {
+    touch-action: manipulation;
   }
 }
 
