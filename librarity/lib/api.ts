@@ -213,6 +213,30 @@ class APIClient {
     return this.request(`/admin/stats/growth?days=${days}`);
   }
 
+  async getActiveUsersStats() {
+    return this.request('/admin/stats/active-users');
+  }
+
+  async getChatModesStats(days = 30) {
+    return this.request(`/admin/stats/chat-modes?days=${days}`);
+  }
+
+  async getTimeInAppStats(days = 30) {
+    return this.request(`/admin/stats/time-in-app?days=${days}`);
+  }
+
+  async getViralCoefficientStats(days = 30) {
+    return this.request(`/admin/stats/viral-coefficient?days=${days}`);
+  }
+
+  async getRetentionStats() {
+    return this.request('/admin/stats/retention');
+  }
+
+  async getConversionToPremiumStats() {
+    return this.request('/admin/stats/conversion-to-premium');
+  }
+
   async getAllUsers(page = 1, pageSize = 50) {
     return this.request(`/admin/users?page=${page}&page_size=${pageSize}`);
   }

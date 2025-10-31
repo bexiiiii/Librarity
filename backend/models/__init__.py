@@ -10,6 +10,7 @@ from models.shared_content import SharedContent
 from models.usage_log import UsageLog
 from models.payment import Payment, PaymentStatus, PaymentMethod
 from models.leaderboard import Leaderboard
+from models.user_session import UserSession, UserReferral
 
 __all__ = [
     "User",
@@ -30,4 +31,6 @@ __all__ = [
     "PaymentStatus",
     "PaymentMethod",
     "Leaderboard",
+    "UserSession",
+    "UserReferral",
 ]

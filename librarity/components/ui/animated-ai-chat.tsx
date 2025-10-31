@@ -169,6 +169,7 @@ export function AnimatedAIChat({ onUploadClick, uploadedBook, onRemoveBook, curr
     const [isTyping, setIsTyping] = useState(false);
     const [shareDialogOpen, setShareDialogOpen] = useState(false);
     const [selectedShare, setSelectedShare] = useState<{ question: string; answer: string } | null>(null);
+    const [copiedMessageIndex, setCopiedMessageIndex] = useState<number | null>(null);
     const [isPending, startTransition] = useTransition();
     const [activeSuggestion, setActiveSuggestion] = useState<number>(-1);
     const [showCommandPalette, setShowCommandPalette] = useState(false);
@@ -677,6 +678,37 @@ export function AnimatedAIChat({ onUploadClick, uploadedBook, onRemoveBook, curr
         setShareDialogOpen(true);
     };
     
+    const handleCopyMessage = async (content: string, index: number) => {
+        try {
+            await navigator.clipboard.writeText(content);
+            setCopiedMessageIndex(index);
+            
+            // Haptic feedback on mobile
+            if ('vibrate' in navigator) {
+                navigator.vibrate(50);
+            }
+            
+            setTimeout(() => setCopiedMessageIndex(null), 2000);
+        } catch (error) {
+            console.error('Failed to copy:', error);
+            // Fallback for older browsers
+            const textArea = document.createElement('textarea');
+            textArea.value = content;
+            textArea.style.position = 'fixed';
+            textArea.style.left = '-999999px';
+            document.body.appendChild(textArea);
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                setCopiedMessageIndex(index);
+                setTimeout(() => setCopiedMessageIndex(null), 2000);
+            } catch (err) {
+                console.error('Fallback copy failed:', err);
+            }
+            document.body.removeChild(textArea);
+        }
+    };
+    
     const selectCommandSuggestion = (index: number) => {
         const selectedCommand = commandSuggestions[index];
         setValue(selectedCommand.prefix + ' ');
@@ -948,20 +980,51 @@ export function AnimatedAIChat({ onUploadClick, uploadedBook, onRemoveBook, curr
                                                     )}
                                                 </div>
                                                 
-                                                {/* Share button for assistant messages */}
+                                                {/* Action buttons for assistant messages */}
                                                 {isAssistantMessage && index > 0 && (
-                                                    <motion.button
-                                                        onClick={() => handleShareAnswer(messages[index - 1].content, message.content)}
-                                                        initial={{ opacity: 0 }}
-                                                        animate={{ opacity: 1 }}
-                                                        transition={{ delay: 0.2 }}
-                                                        className="flex items-center gap-1.5 px-2.5 py-1 bg-black/5 hover:bg-black/10 rounded-lg text-black/60 hover:text-black/80 text-xs transition-all w-fit"
-                                                        whileHover={{ scale: 1.02 }}
-                                                        whileTap={{ scale: 0.98 }}
-                                                    >
-                                                        <Share2 className="w-3 h-3" />
-                                                        <span>Share Answer</span>
-                                                    </motion.button>
+                                                    <div className="flex items-center gap-2 mt-2">
+                                                        {/* Copy button */}
+                                                        <motion.button
+                                                            onClick={() => handleCopyMessage(message.content, index)}
+                                                            initial={{ opacity: 0 }}
+                                                            animate={{ opacity: 1 }}
+                                                            transition={{ delay: 0.2 }}
+                                                            className="flex items-center gap-1.5 px-2.5 py-1 bg-black/5 hover:bg-black/10 rounded-lg text-black/60 hover:text-black/80 text-xs transition-all w-fit"
+                                                            whileHover={{ scale: 1.02 }}
+                                                            whileTap={{ scale: 0.98 }}
+                                                        >
+                                                            {copiedMessageIndex === index ? (
+                                                                <>
+                                                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-green-600">
+                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                                                                    </svg>
+                                                                    <span className="text-green-600">Скопировано</span>
+                                                                </>
+                                                            ) : (
+                                                                <>
+                                                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                                                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2" strokeWidth={2} />
+                                                                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" strokeWidth={2} />
+                                                                    </svg>
+                                                                    <span>Copy</span>
+                                                                </>
+                                                            )}
+                                                        </motion.button>
+                                                        
+                                                        {/* Share button */}
+                                                        <motion.button
+                                                            onClick={() => handleShareAnswer(messages[index - 1].content, message.content)}
+                                                            initial={{ opacity: 0 }}
+                                                            animate={{ opacity: 1 }}
+                                                            transition={{ delay: 0.2 }}
+                                                            className="flex items-center gap-1.5 px-2.5 py-1 bg-black/5 hover:bg-black/10 rounded-lg text-black/60 hover:text-black/80 text-xs transition-all w-fit"
+                                                            whileHover={{ scale: 1.02 }}
+                                                            whileTap={{ scale: 0.98 }}
+                                                        >
+                                                            <Share2 className="w-3 h-3" />
+                                                            <span>Share Answer</span>
+                                                        </motion.button>
+                                                    </div>
                                                 )}
                                             </div>
                                         </motion.div>
@@ -1398,20 +1461,49 @@ export function AnimatedAIChat({ onUploadClick, uploadedBook, onRemoveBook, curr
                                             )}
                                         </div>
                                         
-                                        {/* Share button for assistant messages */}
+                                        {/* Action buttons for assistant messages */}
                                         {isAssistantMessage && index > 0 && (
-                                            <motion.button
-                                                onClick={() => handleShareAnswer(messages[index - 1].content, message.content)}
-                                                initial={{ opacity: 0 }}
-                                                animate={{ opacity: 1 }}
-                                                transition={{ delay: 0.2 }}
-                                                className="flex items-center gap-1.5 px-2.5 py-1 bg-black/5 hover:bg-black/10 rounded-lg text-black/60 hover:text-black/80 text-xs transition-all w-fit"
-                                                whileHover={{ scale: 1.02 }}
-                                                whileTap={{ scale: 0.98 }}
-                                            >
-                                                <Share2 className="w-3 h-3" />
-                                                <span>Share Answer</span>
-                                            </motion.button>
+                                            <div className="flex items-center gap-2 mt-2">
+                                                {/* Copy button */}
+                                                <motion.button
+                                                    onClick={() => handleCopyMessage(message.content, index)}
+                                                    initial={{ opacity: 0 }}
+                                                    animate={{ opacity: 1 }}
+                                                    transition={{ delay: 0.2 }}
+                                                    className="flex items-center gap-1.5 px-2.5 py-1 bg-black/5 active:bg-black/10 rounded-lg text-black/60 active:text-black/80 text-xs transition-all w-fit"
+                                                    whileTap={{ scale: 0.98 }}
+                                                >
+                                                    {copiedMessageIndex === index ? (
+                                                        <>
+                                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-green-600">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                                                            </svg>
+                                                            <span className="text-green-600">Скопировано</span>
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2" strokeWidth={2} />
+                                                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" strokeWidth={2} />
+                                                            </svg>
+                                                            <span>Copy</span>
+                                                        </>
+                                                    )}
+                                                </motion.button>
+                                                
+                                                {/* Share button */}
+                                                <motion.button
+                                                    onClick={() => handleShareAnswer(messages[index - 1].content, message.content)}
+                                                    initial={{ opacity: 0 }}
+                                                    animate={{ opacity: 1 }}
+                                                    transition={{ delay: 0.2 }}
+                                                    className="flex items-center gap-1.5 px-2.5 py-1 bg-black/5 active:bg-black/10 rounded-lg text-black/60 active:text-black/80 text-xs transition-all w-fit"
+                                                    whileTap={{ scale: 0.98 }}
+                                                >
+                                                    <Share2 className="w-3 h-3" />
+                                                    <span>Share Answer</span>
+                                                </motion.button>
+                                            </div>
                                         )}
                                     </div>
                                 </motion.div>

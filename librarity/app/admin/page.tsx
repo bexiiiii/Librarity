@@ -91,6 +91,14 @@ export default function AdminPage() {
     tokens: [],
   });
 
+  // New metrics data
+  const [activeUsers, setActiveUsers] = useState<any>(null);
+  const [chatModes, setChatModes] = useState<any>(null);
+  const [timeInApp, setTimeInApp] = useState<any>(null);
+  const [viralCoefficient, setViralCoefficient] = useState<any>(null);
+  const [retention, setRetention] = useState<any>(null);
+  const [conversion, setConversion] = useState<any>(null);
+
   // Users tab data
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -144,13 +152,25 @@ export default function AdminPage() {
   const loadData = async () => {
     try {
       // Load dashboard data
-      const [overview, growth] = await Promise.all([
+      const [overview, growth, active, modes, time, viral, ret, conv] = await Promise.all([
         api.getAdminOverviewStats(),
         api.getAdminGrowthStats(7),
+        api.getActiveUsersStats().catch(() => null),
+        api.getChatModesStats().catch(() => null),
+        api.getTimeInAppStats().catch(() => null),
+        api.getViralCoefficientStats().catch(() => null),
+        api.getRetentionStats().catch(() => null),
+        api.getConversionToPremiumStats().catch(() => null),
       ]);
 
       setOverviewStats(overview);
       setGrowthData(growth);
+      setActiveUsers(active);
+      setChatModes(modes);
+      setTimeInApp(time);
+      setViralCoefficient(viral);
+      setRetention(ret);
+      setConversion(conv);
 
       // Load users data if on users tab
       if (activeTab === "users") {
@@ -242,7 +262,16 @@ export default function AdminPage() {
       <div className="flex-1 overflow-y-auto">
         <div className="p-8">
           {activeTab === "dashboard" && (
-            <DashboardTab overviewStats={overviewStats} growthData={growthData} />
+            <DashboardTab 
+              overviewStats={overviewStats} 
+              growthData={growthData}
+              activeUsers={activeUsers}
+              chatModes={chatModes}
+              timeInApp={timeInApp}
+              viralCoefficient={viralCoefficient}
+              retention={retention}
+              conversion={conversion}
+            />
           )}
 
           {activeTab === "users" && (

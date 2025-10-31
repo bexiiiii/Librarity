@@ -724,3 +724,385 @@ async def get_system_settings(
         }
     }
 
+
+@router.get("/stats/active-users")
+async def get_active_users_stats(
+    db: AsyncSession = Depends(get_db),
+    admin: User = Depends(get_admin_user)
+):
+    """Get currently active users (real-time)"""
+    from models.user_session import UserSession
+    
+    # Users active in last 5 minutes (consider them online)
+    five_minutes_ago = datetime.utcnow() - timedelta(minutes=5)
+    
+    result = await db.execute(
+        select(func.count(func.distinct(UserSession.user_id)))
+        .where(
+            UserSession.last_active_at >= five_minutes_ago,
+            UserSession.is_active == True
+        )
+    )
+    active_now = result.scalar() or 0
+    
+    # Active in last hour
+    one_hour_ago = datetime.utcnow() - timedelta(hours=1)
+    result = await db.execute(
+        select(func.count(func.distinct(UserSession.user_id)))
+        .where(UserSession.last_active_at >= one_hour_ago)
+    )
+    active_last_hour = result.scalar() or 0
+    
+    # Active today
+    today_start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+    result = await db.execute(
+        select(func.count(func.distinct(UserSession.user_id)))
+        .where(UserSession.started_at >= today_start)
+    )
+    active_today = result.scalar() or 0
+    
+    return {
+        "active_now": active_now,
+        "active_last_hour": active_last_hour,
+        "active_today": active_today,
+        "timestamp": datetime.utcnow().isoformat()
+    }
+
+
+@router.get("/stats/chat-modes")
+async def get_chat_modes_stats(
+    days: int = 30,
+    db: AsyncSession = Depends(get_db),
+    admin: User = Depends(get_admin_user)
+):
+    """Get most popular chat modes usage"""
+    from models.usage_log import UsageLog
+    
+    since_date = datetime.utcnow() - timedelta(days=days)
+    
+    # Get chat mode usage from usage_logs
+    result = await db.execute(
+        select(
+            UsageLog.chat_mode,
+            func.count(UsageLog.id).label('count')
+        )
+        .where(
+            UsageLog.activity_type == 'chat',
+            UsageLog.created_at >= since_date,
+            UsageLog.chat_mode.isnot(None)
+        )
+        .group_by(UsageLog.chat_mode)
+        .order_by(func.count(UsageLog.id).desc())
+    )
+    modes = result.all()
+    
+    # Calculate total and percentages
+    total = sum(count for _, count in modes)
+    
+    modes_data = []
+    for mode, count in modes:
+        modes_data.append({
+            "mode": mode,
+            "count": count,
+            "percentage": round((count / total * 100), 1) if total > 0 else 0
+        })
+    
+    return {
+        "modes": modes_data,
+        "total_chats": total,
+        "period_days": days
+    }
+
+
+@router.get("/stats/time-in-app")
+async def get_time_in_app_stats(
+    days: int = 30,
+    db: AsyncSession = Depends(get_db),
+    admin: User = Depends(get_admin_user)
+):
+    """Get average time users spend in the app"""
+    from models.user_session import UserSession
+    
+    since_date = datetime.utcnow() - timedelta(days=days)
+    
+    # Average session duration (only completed sessions)
+    result = await db.execute(
+        select(
+            func.avg(UserSession.duration_seconds).label('avg_duration'),
+            func.sum(UserSession.duration_seconds).label('total_duration'),
+            func.count(UserSession.id).label('session_count')
+        )
+        .where(
+            UserSession.started_at >= since_date,
+            UserSession.ended_at.isnot(None)
+        )
+    )
+    stats = result.first()
+    
+    avg_seconds = int(stats.avg_duration) if stats.avg_duration else 0
+    total_seconds = int(stats.total_duration) if stats.total_duration else 0
+    session_count = stats.session_count or 0
+    
+    # Get average time per user
+    result = await db.execute(
+        select(
+            UserSession.user_id,
+            func.sum(UserSession.duration_seconds).label('user_total')
+        )
+        .where(
+            UserSession.started_at >= since_date,
+            UserSession.ended_at.isnot(None)
+        )
+        .group_by(UserSession.user_id)
+    )
+    user_totals = result.all()
+    
+    avg_per_user = int(sum(t for _, t in user_totals) / len(user_totals)) if user_totals else 0
+    
+    # Time with book (chat interactions per session)
+    result = await db.execute(
+        select(func.avg(UserSession.chat_interactions))
+        .where(
+            UserSession.started_at >= since_date,
+            UserSession.chat_interactions > 0
+        )
+    )
+    avg_interactions = result.scalar() or 0
+    
+    return {
+        "average_session_minutes": round(avg_seconds / 60, 1),
+        "average_per_user_minutes": round(avg_per_user / 60, 1),
+        "total_hours": round(total_seconds / 3600, 1),
+        "total_sessions": session_count,
+        "average_interactions_per_session": round(avg_interactions, 1),
+        "period_days": days
+    }
+
+
+@router.get("/stats/viral-coefficient")
+async def get_viral_coefficient_stats(
+    days: int = 30,
+    db: AsyncSession = Depends(get_db),
+    admin: User = Depends(get_admin_user)
+):
+    """Calculate viral coefficient - how many new users does one user bring"""
+    from models.user_session import UserReferral
+    
+    since_date = datetime.utcnow() - timedelta(days=days)
+    
+    # Total users who joined in the period
+    result = await db.execute(
+        select(func.count(User.id))
+        .where(User.created_at >= since_date)
+    )
+    new_users = result.scalar() or 0
+    
+    # Total referrals made in the period
+    result = await db.execute(
+        select(func.count(UserReferral.id))
+        .where(UserReferral.created_at >= since_date)
+    )
+    total_referrals = result.scalar() or 0
+    
+    # Active referrals (referred users who became active)
+    result = await db.execute(
+        select(func.count(UserReferral.id))
+        .where(
+            UserReferral.created_at >= since_date,
+            UserReferral.is_active_referral == True
+        )
+    )
+    active_referrals = result.scalar() or 0
+    
+    # Number of users who made at least one referral
+    result = await db.execute(
+        select(func.count(func.distinct(UserReferral.referrer_user_id)))
+        .where(UserReferral.created_at >= since_date)
+    )
+    referring_users = result.scalar() or 0
+    
+    # Calculate viral coefficient
+    # K = (Average invites per user) * (Conversion rate of invites)
+    avg_invites_per_user = total_referrals / new_users if new_users > 0 else 0
+    conversion_rate = active_referrals / total_referrals if total_referrals > 0 else 0
+    viral_coefficient = avg_invites_per_user * conversion_rate
+    
+    # Alternative: Just active referrals per existing user
+    simple_coefficient = active_referrals / new_users if new_users > 0 else 0
+    
+    return {
+        "viral_coefficient": round(viral_coefficient, 2),
+        "simple_coefficient": round(simple_coefficient, 2),
+        "new_users": new_users,
+        "total_referrals": total_referrals,
+        "active_referrals": active_referrals,
+        "referring_users": referring_users,
+        "average_invites_per_user": round(avg_invites_per_user, 2),
+        "referral_conversion_rate": round(conversion_rate * 100, 1),
+        "period_days": days,
+        "interpretation": "K > 1 means exponential growth" if viral_coefficient > 1 else "K < 1 means need to improve referrals"
+    }
+
+
+@router.get("/stats/retention")
+async def get_retention_stats(
+    db: AsyncSession = Depends(get_db),
+    admin: User = Depends(get_admin_user)
+):
+    """Calculate retention rates (7-day and 30-day)"""
+    
+    # 7-day retention
+    seven_days_ago = datetime.utcnow() - timedelta(days=7)
+    fourteen_days_ago = datetime.utcnow() - timedelta(days=14)
+    
+    # Users who signed up 7-14 days ago (cohort)
+    result = await db.execute(
+        select(func.count(User.id))
+        .where(
+            User.created_at >= fourteen_days_ago,
+            User.created_at < seven_days_ago
+        )
+    )
+    cohort_7day = result.scalar() or 0
+    
+    # Of those users, how many were active in the last 7 days
+    result = await db.execute(
+        select(func.count(User.id))
+        .where(
+            User.created_at >= fourteen_days_ago,
+            User.created_at < seven_days_ago,
+            User.last_login >= seven_days_ago
+        )
+    )
+    retained_7day = result.scalar() or 0
+    
+    retention_7day = (retained_7day / cohort_7day * 100) if cohort_7day > 0 else 0
+    
+    # 30-day retention
+    thirty_days_ago = datetime.utcnow() - timedelta(days=30)
+    sixty_days_ago = datetime.utcnow() - timedelta(days=60)
+    
+    # Users who signed up 30-60 days ago (cohort)
+    result = await db.execute(
+        select(func.count(User.id))
+        .where(
+            User.created_at >= sixty_days_ago,
+            User.created_at < thirty_days_ago
+        )
+    )
+    cohort_30day = result.scalar() or 0
+    
+    # Of those users, how many were active in the last 30 days
+    result = await db.execute(
+        select(func.count(User.id))
+        .where(
+            User.created_at >= sixty_days_ago,
+            User.created_at < thirty_days_ago,
+            User.last_login >= thirty_days_ago
+        )
+    )
+    retained_30day = result.scalar() or 0
+    
+    retention_30day = (retained_30day / cohort_30day * 100) if cohort_30day > 0 else 0
+    
+    return {
+        "retention_7day": {
+            "percentage": round(retention_7day, 1),
+            "cohort_size": cohort_7day,
+            "retained_users": retained_7day,
+            "description": "Users who returned after 7 days"
+        },
+        "retention_30day": {
+            "percentage": round(retention_30day, 1),
+            "cohort_size": cohort_30day,
+            "retained_users": retained_30day,
+            "description": "Users who returned after 30 days"
+        }
+    }
+
+
+@router.get("/stats/conversion-to-premium")
+async def get_conversion_to_premium_stats(
+    db: AsyncSession = Depends(get_db),
+    admin: User = Depends(get_admin_user)
+):
+    """Calculate conversion rate from free to premium tiers"""
+    
+    # Total users
+    result = await db.execute(select(func.count(User.id)))
+    total_users = result.scalar() or 0
+    
+    # Free users
+    result = await db.execute(
+        select(func.count(Subscription.id))
+        .where(Subscription.tier == SubscriptionTier.FREE)
+    )
+    free_users = result.scalar() or 0
+    
+    # Premium users (Pro + Ultimate)
+    result = await db.execute(
+        select(func.count(Subscription.id))
+        .where(
+            or_(
+                Subscription.tier == SubscriptionTier.PRO,
+                Subscription.tier == SubscriptionTier.ULTIMATE
+            )
+        )
+    )
+    premium_users = result.scalar() or 0
+    
+    # Pro users
+    result = await db.execute(
+        select(func.count(Subscription.id))
+        .where(Subscription.tier == SubscriptionTier.PRO)
+    )
+    pro_users = result.scalar() or 0
+    
+    # Ultimate users
+    result = await db.execute(
+        select(func.count(Subscription.id))
+        .where(Subscription.tier == SubscriptionTier.ULTIMATE)
+    )
+    ultimate_users = result.scalar() or 0
+    
+    # Calculate conversion rate
+    conversion_rate = (premium_users / total_users * 100) if total_users > 0 else 0
+    
+    # Conversions in last 30 days
+    thirty_days_ago = datetime.utcnow() - timedelta(days=30)
+    
+    # Get users who upgraded in last 30 days (from payment records)
+    from models.payment import Payment, PaymentStatus
+    
+    result = await db.execute(
+        select(func.count(func.distinct(Payment.user_id)))
+        .where(
+            Payment.created_at >= thirty_days_ago,
+            Payment.status == PaymentStatus.COMPLETED
+        )
+    )
+    recent_conversions = result.scalar() or 0
+    
+    # New users in last 30 days
+    result = await db.execute(
+        select(func.count(User.id))
+        .where(User.created_at >= thirty_days_ago)
+    )
+    new_users_30day = result.scalar() or 0
+    
+    conversion_rate_30day = (recent_conversions / new_users_30day * 100) if new_users_30day > 0 else 0
+    
+    return {
+        "overall_conversion_percentage": round(conversion_rate, 1),
+        "conversion_30day_percentage": round(conversion_rate_30day, 1),
+        "total_users": total_users,
+        "free_users": free_users,
+        "premium_users": premium_users,
+        "breakdown": {
+            "pro": pro_users,
+            "ultimate": ultimate_users
+        },
+        "recent_conversions_30day": recent_conversions,
+        "new_users_30day": new_users_30day
+    }
+

@@ -371,9 +371,30 @@ export default function Home() {
     try {
       await navigator.clipboard.writeText(content);
       setCopiedMessageIndex(index);
+      
+      // Haptic feedback on mobile
+      if ('vibrate' in navigator) {
+        navigator.vibrate(50);
+      }
+      
       setTimeout(() => setCopiedMessageIndex(null), 2000);
     } catch (error) {
       console.error('Failed to copy:', error);
+      // Fallback for older browsers
+      const textArea = document.createElement('textarea');
+      textArea.value = content;
+      textArea.style.position = 'fixed';
+      textArea.style.left = '-999999px';
+      document.body.appendChild(textArea);
+      textArea.select();
+      try {
+        document.execCommand('copy');
+        setCopiedMessageIndex(index);
+        setTimeout(() => setCopiedMessageIndex(null), 2000);
+      } catch (err) {
+        console.error('Fallback copy failed:', err);
+      }
+      document.body.removeChild(textArea);
     }
   };
 
@@ -846,23 +867,33 @@ export default function Home() {
                               {message.content}
                             </ReactMarkdown>
                           </div>
-                          {/* Copy button */}
-                          <button
+                          
+                          {/* Copy button with animation - visible on mobile, hover on desktop */}
+                          <motion.button
                             onClick={() => handleCopyMessage(message.content, index)}
-                            className="absolute top-2 right-2 p-1.5 rounded-lg bg-white/80 hover:bg-white shadow-sm transition-all opacity-0 group-hover:opacity-100"
-                            title={copiedMessageIndex === index ? "Скопировано!" : "Копировать"}
+                            className="absolute top-2 right-2 p-2 rounded-lg bg-white hover:bg-gray-50 border border-gray-200 shadow-sm transition-all opacity-100 md:opacity-0 md:group-hover:opacity-100"
+                            title={copiedMessageIndex === index ? "Скопировано!" : "Копировать ответ"}
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.95 }}
                           >
                             {copiedMessageIndex === index ? (
-                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-green-600">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                              </svg>
+                              <motion.div
+                                initial={{ scale: 0 }}
+                                animate={{ scale: 1 }}
+                                className="flex items-center gap-1"
+                              >
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-green-600">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                                </svg>
+                                <span className="text-xs font-medium text-green-600">Скопировано</span>
+                              </motion.div>
                             ) : (
-                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-gray-600">
+                              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-gray-600 hover:text-gray-900">
                                 <rect x="9" y="9" width="13" height="13" rx="2" ry="2" strokeWidth={2} />
                                 <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" strokeWidth={2} />
                               </svg>
                             )}
-                          </button>
+                          </motion.button>
                         </>
                       )}
                     </div>

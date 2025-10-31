@@ -7,7 +7,11 @@ import {
   MessageSquare, 
   Zap,
   TrendingUp,
-  Activity
+  Activity,
+  Clock,
+  Share2,
+  RefreshCw,
+  Target
 } from "lucide-react";
 
 interface OverviewStats {
@@ -50,9 +54,49 @@ interface DashboardTabProps {
     chats: GrowthData[];
     tokens: GrowthData[];
   };
+  activeUsers?: {
+    active_now: number;
+    active_last_hour: number;
+    active_today: number;
+  };
+  chatModes?: {
+    modes: Array<{ mode: string; count: number; percentage: number }>;
+    total_chats: number;
+  };
+  timeInApp?: {
+    average_session_minutes: number;
+    average_per_user_minutes: number;
+    total_hours: number;
+    average_interactions_per_session: number;
+  };
+  viralCoefficient?: {
+    viral_coefficient: number;
+    simple_coefficient: number;
+    total_referrals: number;
+    active_referrals: number;
+    interpretation: string;
+  };
+  retention?: {
+    retention_7day: { percentage: number; cohort_size: number };
+    retention_30day: { percentage: number; cohort_size: number };
+  };
+  conversion?: {
+    overall_conversion_percentage: number;
+    conversion_30day_percentage: number;
+    premium_users: number;
+  };
 }
 
-export function DashboardTab({ overviewStats, growthData }: DashboardTabProps) {
+export function DashboardTab({ 
+  overviewStats, 
+  growthData,
+  activeUsers,
+  chatModes,
+  timeInApp,
+  viralCoefficient,
+  retention,
+  conversion
+}: DashboardTabProps) {
   return (
     <div className="space-y-6">
       {/* Main Stats Cards with Mini Charts */}
@@ -369,6 +413,218 @@ export function DashboardTab({ overviewStats, growthData }: DashboardTabProps) {
             </div>
           </div>
         </motion.div>
+      </div>
+
+      {/* New Metrics Row - Active Users, Chat Modes, Time in App */}
+      <div className="grid grid-cols-3 gap-6">
+        {/* Active Users Now */}
+        {activeUsers && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.7 }}
+            className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-6 border border-green-200"
+          >
+            <div className="flex items-start justify-between mb-4">
+              <div>
+                <div className="text-sm text-green-600 font-medium mb-1">👥 Active Users</div>
+                <div className="text-3xl font-bold text-gray-900">
+                  {activeUsers.active_now}
+                </div>
+                <div className="text-xs text-green-600 mt-1">Online right now</div>
+              </div>
+              <div className="p-3 bg-green-100 rounded-xl">
+                <Activity className="w-6 h-6 text-green-600" />
+              </div>
+            </div>
+            <div className="space-y-2 mt-4 pt-4 border-t border-green-200">
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-600">Last hour</span>
+                <span className="font-semibold text-gray-900">{activeUsers.active_last_hour}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-600">Today</span>
+                <span className="font-semibold text-gray-900">{activeUsers.active_today}</span>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Most Popular Chat Modes */}
+        {chatModes && chatModes.modes && chatModes.modes.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.8 }}
+            className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-6 border border-purple-200"
+          >
+            <div className="flex items-start justify-between mb-4">
+              <div>
+                <div className="text-sm text-purple-600 font-medium mb-1">💬 Most Used Mode</div>
+                <div className="text-3xl font-bold text-gray-900">
+                  {chatModes.modes[0].mode}
+                </div>
+                <div className="text-xs text-purple-600 mt-1">{chatModes.modes[0].percentage}% of chats</div>
+              </div>
+              <div className="p-3 bg-purple-100 rounded-xl">
+                <MessageSquare className="w-6 h-6 text-purple-600" />
+              </div>
+            </div>
+            <div className="space-y-2 mt-4 pt-4 border-t border-purple-200">
+              {chatModes.modes.slice(0, 3).map((mode, idx) => (
+                <div key={idx} className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">{mode.mode}</span>
+                  <div className="flex items-center gap-2">
+                    <div className="w-20 bg-purple-100 rounded-full h-2">
+                      <div 
+                        className="bg-purple-500 h-2 rounded-full"
+                        style={{ width: `${mode.percentage}%` }}
+                      />
+                    </div>
+                    <span className="text-sm font-semibold text-gray-900 w-12 text-right">{mode.percentage}%</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        )}
+
+        {/* Time in App */}
+        {timeInApp && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.9 }}
+            className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-2xl p-6 border border-blue-200"
+          >
+            <div className="flex items-start justify-between mb-4">
+              <div>
+                <div className="text-sm text-blue-600 font-medium mb-1">⏱️ Time in App</div>
+                <div className="text-3xl font-bold text-gray-900">
+                  {timeInApp.average_per_user_minutes.toFixed(0)}m
+                </div>
+                <div className="text-xs text-blue-600 mt-1">Average per user</div>
+              </div>
+              <div className="p-3 bg-blue-100 rounded-xl">
+                <Clock className="w-6 h-6 text-blue-600" />
+              </div>
+            </div>
+            <div className="space-y-2 mt-4 pt-4 border-t border-blue-200">
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-600">Avg session</span>
+                <span className="font-semibold text-gray-900">{timeInApp.average_session_minutes.toFixed(0)}m</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-600">Total hours</span>
+                <span className="font-semibold text-gray-900">{timeInApp.total_hours.toFixed(0)}h</span>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </div>
+
+      {/* Advanced Metrics Row - Viral Coefficient, Retention, Conversion */}
+      <div className="grid grid-cols-3 gap-6">
+        {/* Viral Coefficient */}
+        {viralCoefficient && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 1.0 }}
+            className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-2xl p-6 border border-orange-200"
+          >
+            <div className="flex items-start justify-between mb-4">
+              <div>
+                <div className="text-sm text-orange-600 font-medium mb-1">🚀 Viral Coefficient</div>
+                <div className="text-3xl font-bold text-gray-900">
+                  {viralCoefficient.viral_coefficient.toFixed(2)}
+                </div>
+                <div className="text-xs text-orange-600 mt-1">
+                  {viralCoefficient.viral_coefficient >= 1 ? "📈 Growing!" : "📊 Need improvement"}
+                </div>
+              </div>
+              <div className="p-3 bg-orange-100 rounded-xl">
+                <Share2 className="w-6 h-6 text-orange-600" />
+              </div>
+            </div>
+            <div className="space-y-2 mt-4 pt-4 border-t border-orange-200">
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-600">Total referrals</span>
+                <span className="font-semibold text-gray-900">{viralCoefficient.total_referrals}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-600">Active referrals</span>
+                <span className="font-semibold text-gray-900">{viralCoefficient.active_referrals}</span>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Retention */}
+        {retention && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 1.1 }}
+            className="bg-gradient-to-br from-teal-50 to-cyan-50 rounded-2xl p-6 border border-teal-200"
+          >
+            <div className="flex items-start justify-between mb-4">
+              <div>
+                <div className="text-sm text-teal-600 font-medium mb-1">🔄 Retention</div>
+                <div className="text-3xl font-bold text-gray-900">
+                  {retention.retention_7day.percentage.toFixed(0)}%
+                </div>
+                <div className="text-xs text-teal-600 mt-1">7-day retention</div>
+              </div>
+              <div className="p-3 bg-teal-100 rounded-xl">
+                <RefreshCw className="w-6 h-6 text-teal-600" />
+              </div>
+            </div>
+            <div className="space-y-2 mt-4 pt-4 border-t border-teal-200">
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-600">7-day cohort</span>
+                <span className="font-semibold text-gray-900">{retention.retention_7day.cohort_size} users</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-600">30-day retention</span>
+                <span className="font-semibold text-gray-900">{retention.retention_30day.percentage.toFixed(0)}%</span>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Conversion to Premium */}
+        {conversion && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 1.2 }}
+            className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl p-6 border border-indigo-200"
+          >
+            <div className="flex items-start justify-between mb-4">
+              <div>
+                <div className="text-sm text-indigo-600 font-medium mb-1">💎 Conversion Rate</div>
+                <div className="text-3xl font-bold text-gray-900">
+                  {conversion.overall_conversion_percentage.toFixed(1)}%
+                </div>
+                <div className="text-xs text-indigo-600 mt-1">Free to Premium</div>
+              </div>
+              <div className="p-3 bg-indigo-100 rounded-xl">
+                <Target className="w-6 h-6 text-indigo-600" />
+              </div>
+            </div>
+            <div className="space-y-2 mt-4 pt-4 border-t border-indigo-200">
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-600">Premium users</span>
+                <span className="font-semibold text-gray-900">{conversion.premium_users}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-600">30-day conversion</span>
+                <span className="font-semibold text-gray-900">{conversion.conversion_30day_percentage.toFixed(1)}%</span>
+              </div>
+            </div>
+          </motion.div>
+        )}
       </div>
 
       {/* Growth Chart */}
