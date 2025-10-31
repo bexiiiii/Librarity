@@ -465,7 +465,7 @@ export default function Home() {
         </div>
 
         {/* Chats Section */}
-        <div className="flex-1 overflow-y-auto px-5 pb-3">
+        <div className="flex-1 overflow-y-auto px-5 pb-3 flex flex-col">
           <h2 className="text-white text-sm font-semibold mb-2">Chats</h2>
           
           <div className="space-y-1.5">
@@ -490,6 +490,9 @@ export default function Home() {
               <p className="text-white/40 text-xs py-2">No chats yet</p>
             )}
           </div>
+          
+          {/* Spacer - занимает всё оставшееся пространство */}
+          <div className="flex-1" />
         </div>
 
         {/* Divider */}
@@ -637,9 +640,9 @@ export default function Home() {
 
         {/* Chat Area or Upload Area */}
         {uploadedBook ? (
-          <div className="flex-1 flex flex-col min-h-0">
+          <div className="flex-1 flex flex-col min-h-0 max-h-[100dvh]">
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-6 space-y-3 max-w-5xl mx-auto w-full min-h-0">
+            <div className="flex-1 overflow-y-auto p-6 space-y-3 max-w-5xl mx-auto w-full">
               {messages.length === 0 && !isProcessing ? (
                 /* Welcome message when book is ready */
                 <div className="flex flex-col items-center justify-center h-full text-center">
@@ -723,8 +726,8 @@ export default function Home() {
               <div ref={messagesEndRef} />
             </div>
 
-            {/* Input Area */}
-            <div className="p-3 md:p-4 border-t border-gray-100 max-w-5xl mx-auto w-full" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
+            {/* Input Area - Fixed at bottom */}
+            <div className="flex-shrink-0 p-3 md:p-4 border-t border-gray-100 max-w-5xl mx-auto w-full" style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom))' }}>
               {isProcessing ? (
                 <div className="mb-3 flex items-center justify-center gap-2 text-sm text-gray-600 bg-pink-50 py-2 px-4 rounded-lg">
                   <svg
