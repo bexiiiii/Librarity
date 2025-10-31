@@ -259,16 +259,105 @@ class PolarService:
         """Handle checkout update (e.g., completed)"""
         checkout_id = data.get("id")
         status = data.get("status")
+        customer_email = data.get("customer_email")
+        product = data.get("product", {})
+        product_name = product.get("name", "").lower() if product else ""
+        amount = data.get("amount", 0)
+        product_id = data.get("product_id")
         
         logger.info(
             "polar_checkout_updated_webhook",
             checkout_id=checkout_id,
-            status=status
+            status=status,
+            customer_email=customer_email,
+            product_name=product_name
         )
         
-        # If checkout is confirmed, create subscription
+        # If checkout is confirmed, create/upgrade subscription
         if status == "confirmed":
-            await self._handle_subscription_created(db, data)
+            if not customer_email:
+                logger.error("checkout_confirmed_without_email", checkout_id=checkout_id)
+                return
+            
+            # Find user by email
+            result = await db.execute(
+                select(User).where(User.email == customer_email)
+            )
+            user = result.scalar_one_or_none()
+            
+            if not user:
+                logger.error("user_not_found_for_checkout", email=customer_email)
+                return
+            
+            # Determine tier from product name
+            tier = SubscriptionTier.FREE
+            if "pro" in product_name:
+                tier = SubscriptionTier.PRO
+            elif "ultimate" in product_name:
+                tier = SubscriptionTier.ULTIMATE
+            else:
+                tier = self._get_tier_from_product(product_id)
+            
+            # Get or create subscription
+            result = await db.execute(
+                select(Subscription).where(Subscription.user_id == user.id)
+            )
+            subscription = result.scalar_one_or_none()
+            
+            if not subscription:
+                subscription = Subscription(user_id=user.id)
+                db.add(subscription)
+            
+            # Update subscription
+            subscription.tier = tier
+            subscription.status = SubscriptionStatus.ACTIVE
+            subscription.polar_product_id = product_id
+            subscription.token_limit = settings.token_limit_by_tier[tier.value]
+            subscription.tokens_used = 0
+            subscription.current_period_start = datetime.utcnow()
+            subscription.current_period_end = datetime.utcnow() + timedelta(days=30)
+            subscription.tokens_reset_at = datetime.utcnow() + timedelta(days=30)
+            
+            # Set features based on tier
+            if tier == SubscriptionTier.PRO:
+                subscription.max_books = 20
+                subscription.has_citation_mode = True
+                subscription.has_coach_mode = True
+                subscription.price = amount / 100 if amount else 9.0
+            elif tier == SubscriptionTier.ULTIMATE:
+                subscription.max_books = 999
+                subscription.has_citation_mode = True
+                subscription.has_author_mode = True
+                subscription.has_coach_mode = True
+                subscription.has_analytics = True
+                subscription.price = amount / 100 if amount else 19.0
+            
+            await db.commit()
+            
+            # Create payment record
+            payment = Payment(
+                user_id=user.id,
+                amount=amount / 100 if amount else 0,
+                currency="USD",
+                status=PaymentStatus.COMPLETED,
+                payment_method=PaymentMethod.POLAR,
+                external_payment_id=checkout_id,
+                metadata={
+                    "tier": tier.value,
+                    "product_name": product_name,
+                    "checkout_id": checkout_id,
+                    "sandbox": self.sandbox_mode
+                }
+            )
+            db.add(payment)
+            await db.commit()
+            
+            logger.info(
+                "subscription_created_from_checkout",
+                user_id=str(user.id),
+                tier=tier.value,
+                checkout_id=checkout_id
+            )
     
     async def _handle_subscription_created(
         self,
