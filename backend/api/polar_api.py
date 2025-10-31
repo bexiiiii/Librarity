@@ -133,28 +133,39 @@ async def create_checkout_session(
 @router.post("/webhook")
 async def handle_polar_webhook(
     request: Request,
-    db: AsyncSession = Depends(get_db),
-    x_polar_signature: Optional[str] = Header(None)
+    db: AsyncSession = Depends(get_db)
 ):
     """Handle Polar.sh webhook events"""
     
     # Get raw body for signature verification
     body = await request.body()
     
-    # Verify webhook signature
-    if x_polar_signature:
-        is_valid = await polar_service.verify_webhook_signature(body, x_polar_signature)
+    # Verify webhook signature using Standard Webhooks headers
+    # Polar uses: webhook-id, webhook-timestamp, webhook-signature
+    webhook_id = request.headers.get("webhook-id")
+    webhook_timestamp = request.headers.get("webhook-timestamp")
+    webhook_signature = request.headers.get("webhook-signature")
+    
+    # Verify signature if webhook secret is configured and not in sandbox mode
+    if settings.POLAR_WEBHOOK_SECRET and not settings.POLAR_SANDBOX_MODE:
+        if not webhook_signature or not webhook_id or not webhook_timestamp:
+            raise HTTPException(
+                status_code=401,
+                detail="Webhook signature headers missing"
+            )
+        
+        # Verify signature using Standard Webhooks format
+        is_valid = await polar_service.verify_webhook_signature(
+            body, 
+            webhook_id, 
+            webhook_timestamp, 
+            webhook_signature
+        )
         if not is_valid:
             raise HTTPException(
                 status_code=401,
                 detail="Invalid webhook signature"
             )
-    elif settings.POLAR_WEBHOOK_SECRET:
-        # Signature is required but not provided
-        raise HTTPException(
-            status_code=401,
-            detail="Webhook signature missing"
-        )
     
     # Parse event
     try:
