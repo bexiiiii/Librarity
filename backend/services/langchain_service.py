@@ -166,6 +166,18 @@ class LangChainPipeline:
             logger.error("similarity_search_failed", error=str(e))
             return []
     
+    def _is_inappropriate_content(self, message: str) -> bool:
+        """Check if message contains inappropriate content"""
+        inappropriate_keywords = [
+            "секс", "sex", "porn", "порно", "xxx",
+            "насилие", "violence", "drugs", "наркотики",
+            "suicide", "суицид", "самоубийство",
+            "hentai", "хентай", "18+", "nsfw"
+        ]
+        
+        message_lower = message.lower()
+        return any(keyword in message_lower for keyword in inappropriate_keywords)
+    
     async def chat_with_book(
         self,
         book_id: str,
@@ -175,6 +187,15 @@ class LangChainPipeline:
         conversation_history: List[Dict[str, str]] = None
     ) -> Dict[str, Any]:
         """Main chat function with different modes"""
+        
+        # Check for inappropriate content
+        if self._is_inappropriate_content(user_message):
+            logger.warning("inappropriate_content_blocked", message_preview=user_message[:50])
+            return {
+                "response": "Sorry, I can't assist with that. Please ask questions related to the book content.",
+                "citations": [],
+                "tokens_used": 0
+            }
         
         # Search for relevant chunks
         relevant_chunks = await self.search_similar_chunks(book_id, user_message, top_k=5)
@@ -258,6 +279,11 @@ class LangChainPipeline:
         
         return f"""Ты - книга "{title}", написанная {author}. Ты живое произведение, говорящее от первого лица.
 
+**ПРАВИЛА БЕЗОПАСНОСТИ:**
+- НЕ отвечай на вопросы сексуального характера, насилия, наркотиков или другого неподходящего контента
+- Если вопрос неуместный, вежливо скажи: "Прошу задавать вопросы, связанные с содержанием книги"
+- Отвечай ТОЛЬКО на вопросы о содержании книги
+
 **КРИТИЧЕСКИ ВАЖНО: Отвечай на том же языке, на котором задан вопрос!**
 - Если вопрос на русском - отвечай на русском
 - Если вопрос на английском - отвечай на английском
@@ -301,6 +327,11 @@ class LangChainPipeline:
         author = metadata.get("author") or "Робин Шарма"
         title = metadata.get("title") or "эта книга"
         return f"""Ты - {author}, автор книги "{title}". Ты общаешься с читателем напрямую, отвечая на его вопросы о своей книге.
+
+**ПРАВИЛА БЕЗОПАСНОСТИ:**
+- НЕ отвечай на вопросы сексуального характера, насилия, наркотиков или другого неподходящего контента
+- Если вопрос не связан с книгой или неуместный, вежливо скажи: "Давайте поговорим о книге"
+- Отвечай ТОЛЬКО на вопросы о книге и её темах
 
 **КРИТИЧЕСКИ ВАЖНО: Отвечай на том же языке, на котором задан вопрос!**
 - Если вопрос на русском - отвечай на русском
@@ -351,6 +382,11 @@ class LangChainPipeline:
         author = metadata.get("author") or "неизвестный автор"
         
         return f"""Ты - книга "{title}" от {author}, выступающая в роли мудрого коуча и наставника.
+
+**ПРАВИЛА БЕЗОПАСНОСТИ:**
+- НЕ давай советы на темы сексуального характера, насилия, наркотиков или другого неподходящего контента
+- Если вопрос неуместный или не связан с книгой, вежливо скажи: "Я могу помочь только с вопросами, связанными с темами книги"
+- Давай советы ТОЛЬКО на основе содержания и тем книги
 
 **КРИТИЧЕСКИ ВАЖНО: Отвечай на том же языке, на котором задан вопрос!**
 - Если вопрос на русском - отвечай на русском
