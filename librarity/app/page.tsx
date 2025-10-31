@@ -70,6 +70,8 @@ export default function Home() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
+  const keyboardStateRef = useRef(false);
+  const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
 
   useEffect(() => {
     loadUserData();
@@ -87,6 +89,18 @@ export default function Home() {
         const minChatHeight = Math.max(viewportHeight * 0.4, 200);
         document.documentElement.style.setProperty('--viewport-height', `${viewportHeight}px`);
         document.documentElement.style.setProperty('--min-chat-height', `${minChatHeight}px`);
+
+        const keyboardHeight = Math.max(
+          0,
+          window.innerHeight - (window.visualViewport.height + window.visualViewport.offsetTop)
+        );
+        const isOpen = keyboardHeight > 80;
+        document.documentElement.style.setProperty('--keyboard-offset', `${keyboardHeight}px`);
+
+        if (keyboardStateRef.current !== isOpen) {
+          keyboardStateRef.current = isOpen;
+          setIsKeyboardOpen(isOpen);
+        }
       }
     };
 
@@ -107,6 +121,7 @@ export default function Home() {
 
     if (window.visualViewport) {
       window.visualViewport.addEventListener('resize', handleResize);
+      window.visualViewport.addEventListener('scroll', handleResize);
     }
     window.addEventListener('focusin', handleFocusIn);
     
@@ -116,6 +131,7 @@ export default function Home() {
     return () => {
       if (window.visualViewport) {
         window.visualViewport.removeEventListener('resize', handleResize);
+        window.visualViewport.removeEventListener('scroll', handleResize);
       }
       window.removeEventListener('focusin', handleFocusIn);
     };
@@ -839,7 +855,14 @@ export default function Home() {
             </div>
 
             {/* Input Area - Fixed at bottom */}
-            <div className="flex-shrink-0 p-3 md:p-4 pb-6 border-t border-gray-100 max-w-5xl mx-auto w-full bg-white" style={{ paddingBottom: 'max(1.5rem, calc(env(safe-area-inset-bottom) + 0.75rem))' }}>
+            <div
+              className="flex-shrink-0 p-3 md:p-4 border-t border-gray-100 max-w-5xl mx-auto w-full bg-white transition-[padding-bottom] duration-200 ease-out"
+              style={{
+                paddingBottom: isKeyboardOpen
+                  ? 'calc(env(safe-area-inset-bottom) + 0.5rem)'
+                  : 'max(1.5rem, calc(env(safe-area-inset-bottom) + 0.75rem))',
+              }}
+            >
               {isProcessing ? (
                 <div className="mb-3 flex items-center justify-center gap-2 text-sm text-gray-600 bg-pink-50 py-2 px-4 rounded-lg">
                   <svg
@@ -1059,9 +1082,11 @@ export default function Home() {
               </div>
 
               {/* Mobile: Disclaimer text */}
-              <p className="md:hidden text-center text-[11px] text-black/70 mt-2">
-                Librarity might make mistakes
-              </p>
+              {!isKeyboardOpen && (
+                <p className="md:hidden text-center text-[11px] text-black/70 mt-2">
+                  Librarity might make mistakes
+                </p>
+              )}
             </div>
           </div>
         ) : (
