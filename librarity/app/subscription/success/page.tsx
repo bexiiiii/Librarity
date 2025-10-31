@@ -10,7 +10,7 @@ function SubscriptionSuccessContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
-  const [message, setMessage] = useState('Проверяем вашу подписку...');
+  const [message, setMessage] = useState('Processing your payment...');
   const [subscription, setSubscription] = useState<{ subscription_tier?: string; subscription_status?: string; tokens_remaining?: number; max_tokens?: number } | null>(null);
   const [countdown, setCountdown] = useState(5);
   const checkoutId = searchParams.get('checkout_id');
@@ -20,7 +20,7 @@ function SubscriptionSuccessContent() {
       try {
         if (!checkoutId) {
           setStatus('error');
-          setMessage('Неверная сессия оплаты');
+          setMessage('Invalid payment session. Please try again or contact support.');
           return;
         }
 
@@ -33,7 +33,7 @@ function SubscriptionSuccessContent() {
         if (subscriptionData && subscriptionData.tier !== 'free') {
           setStatus('success');
           setSubscription(subscriptionData);
-          setMessage(`Поздравляем! Вы успешно перешли на тариф ${subscriptionData.tier.toUpperCase()}!`);
+          setMessage(`Congratulations! You've successfully upgraded to ${subscriptionData.tier.toUpperCase()} plan!`);
           
           // Start countdown
           const interval = setInterval(() => {
@@ -55,7 +55,7 @@ function SubscriptionSuccessContent() {
       } catch (error) {
         console.error('Error verifying subscription:', error);
         setStatus('error');
-        setMessage('Не удалось проверить подписку. Пожалуйста, обновите страницу или обратитесь в поддержку.');
+        setMessage('Failed to verify subscription. Please refresh the page or contact support.');
       }
     };
 
@@ -65,15 +65,17 @@ function SubscriptionSuccessContent() {
   const getTierFeatures = (tier: string) => {
     if (tier === 'pro') {
       return [
-        { icon: BookOpen, text: 'До 5 книг' },
-        { icon: Zap, text: '20,000 токенов' },
-        { icon: Sparkles, text: 'Citation & Coach режимы' },
+        { icon: BookOpen, text: '10 Books' },
+        { icon: Zap, text: '200,000 Tokens/month' },
+        { icon: Sparkles, text: 'All Chat Modes' },
+        { icon: Crown, text: 'Citation & Coach Modes' },
       ];
     } else if (tier === 'ultimate') {
       return [
-        { icon: BookOpen, text: 'Неограниченно книг' },
-        { icon: Zap, text: '100,000 токенов' },
-        { icon: Sparkles, text: 'Все режимы + Аналитика' },
+        { icon: BookOpen, text: 'Unlimited Books' },
+        { icon: Zap, text: '500,000 Tokens/month' },
+        { icon: Sparkles, text: 'All Premium Features' },
+        { icon: Crown, text: 'Priority Support' },
       ];
     }
     return [];
@@ -108,18 +110,21 @@ function SubscriptionSuccessContent() {
               </motion.div>
             </div>
 
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">Обрабатываем платеж</h1>
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">Processing Payment</h1>
             <p className="text-gray-600">{message}</p>
             
-            <div className="mt-6 flex justify-center gap-1">
-              {[0, 1, 2].map((i) => (
-                <motion.div
-                  key={i}
-                  animate={{ scale: [1, 1.5, 1] }}
-                  transition={{ duration: 1, repeat: Infinity, delay: i * 0.2 }}
-                  className="w-2 h-2 bg-pink-500 rounded-full"
-                />
-              ))}
+            <div className="mt-6 space-y-2">
+              <div className="flex justify-center gap-1">
+                {[0, 1, 2].map((i) => (
+                  <motion.div
+                    key={i}
+                    animate={{ scale: [1, 1.5, 1] }}
+                    transition={{ duration: 1, repeat: Infinity, delay: i * 0.2 }}
+                    className="w-2 h-2 bg-pink-500 rounded-full"
+                  />
+                ))}
+              </div>
+              <p className="text-sm text-gray-400">This may take a few seconds...</p>
             </div>
           </motion.div>
         )}
@@ -156,7 +161,7 @@ function SubscriptionSuccessContent() {
             <div className="text-center mb-6">
               <h1 className="text-3xl font-bold text-gray-900 mb-2 flex items-center justify-center gap-2">
                 <Crown className="w-8 h-8 text-yellow-500" />
-                Оплата успешна!
+                Payment Successful!
                 <Crown className="w-8 h-8 text-yellow-500" />
               </h1>
               <p className="text-gray-600">{message}</p>
@@ -173,7 +178,7 @@ function SubscriptionSuccessContent() {
                 <h2 className="text-2xl font-bold uppercase">{subscription.subscription_tier}</h2>
                 <Sparkles className="w-6 h-6" />
               </div>
-              <p className="text-pink-100">Теперь у вас есть доступ ко всем возможностям!</p>
+              <p className="text-pink-100">You now have access to all premium features!</p>
             </motion.div>
 
             {/* Features List */}
@@ -197,15 +202,15 @@ function SubscriptionSuccessContent() {
             {/* Countdown */}
             <div className="text-center">
               <p className="text-sm text-gray-500 mb-4">
-                Автоматический переход на главную через{' '}
-                <span className="font-bold text-pink-600">{countdown}</span> сек
+                Redirecting to your books in{' '}
+                <span className="font-bold text-pink-600">{countdown}</span> seconds
               </p>
               
               <button
                 onClick={() => router.push('/')}
                 className="w-full bg-gradient-to-r from-pink-500 to-purple-600 text-white px-6 py-3 rounded-xl font-semibold hover:from-pink-600 hover:to-purple-700 transition-all transform hover:scale-105 shadow-lg"
               >
-                Перейти к книгам
+                Go to My Books
               </button>
             </div>
           </motion.div>
@@ -229,7 +234,7 @@ function SubscriptionSuccessContent() {
               </div>
             </motion.div>
 
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">Ошибка проверки</h1>
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">Verification Error</h1>
             <p className="text-gray-600 mb-6">{message}</p>
             
             <div className="space-y-3">
@@ -237,14 +242,14 @@ function SubscriptionSuccessContent() {
                 onClick={() => window.location.reload()}
                 className="w-full bg-pink-500 text-white px-6 py-3 rounded-xl font-semibold hover:bg-pink-600 transition-colors"
               >
-                Обновить страницу
+                Refresh Page
               </button>
               
               <button
                 onClick={() => router.push('/')}
                 className="w-full bg-gray-100 text-gray-700 px-6 py-3 rounded-xl font-semibold hover:bg-gray-200 transition-colors"
               >
-                Вернуться на главную
+                Back to Home
               </button>
             </div>
           </motion.div>

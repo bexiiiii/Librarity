@@ -376,7 +376,7 @@ export default function Home() {
   );
 
   return (
-    <div className="flex h-screen bg-[#11101d] overflow-hidden">
+    <div className="flex min-h-[100dvh] bg-[#11101d]">
       {/* Mobile Menu Overlay */}
       {isMobileMenuOpen && (
         <div 
@@ -575,8 +575,8 @@ export default function Home() {
         )}
       </div>
 
-      {/* Main Content Area */}
-      <div className="flex-1 flex flex-col bg-white">
+  {/* Main Content Area */}
+  <div className="flex-1 flex flex-col min-h-0 bg-white">
         {/* Header - Mobile & Desktop */}
         <div className="h-14 md:h-16 flex items-center justify-between px-4 md:px-6 border-b border-gray-100 bg-[#11101d] md:bg-white">
           {/* Mobile: Hamburger menu */}
@@ -637,9 +637,9 @@ export default function Home() {
 
         {/* Chat Area or Upload Area */}
         {uploadedBook ? (
-          <div className="flex-1 flex flex-col overflow-hidden">
+          <div className="flex-1 flex flex-col min-h-0">
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-6 space-y-3 max-w-5xl mx-auto w-full">
+            <div className="flex-1 overflow-y-auto p-6 space-y-3 max-w-5xl mx-auto w-full min-h-0">
               {messages.length === 0 && !isProcessing ? (
                 /* Welcome message when book is ready */
                 <div className="flex flex-col items-center justify-center h-full text-center">
@@ -724,7 +724,7 @@ export default function Home() {
             </div>
 
             {/* Input Area */}
-            <div className="p-3 md:p-4 border-t border-gray-100 max-w-5xl mx-auto w-full">
+            <div className="p-3 md:p-4 border-t border-gray-100 max-w-5xl mx-auto w-full" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
               {isProcessing ? (
                 <div className="mb-3 flex items-center justify-center gap-2 text-sm text-gray-600 bg-pink-50 py-2 px-4 rounded-lg">
                   <svg
@@ -921,6 +921,10 @@ export default function Home() {
                   value={inputMessage}
                   onChange={(e) => setInputMessage(e.target.value)}
                   onKeyPress={(e) => e.key === "Enter" && !isProcessing && handleSendMessage()}
+                  onFocus={() => {
+                    // Small delay so mobile keyboard opens and then we scroll the messages into view
+                    setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' }), 300);
+                  }}
                   placeholder={isProcessing ? "Ждем завершения обработки..." : "Ask from book ....."}
                   disabled={isProcessing}
                   className="w-full h-12 md:h-13 bg-[#f7f7f7] border border-black/20 rounded-[23px] pl-12 md:pl-4 pr-12 text-sm outline-none focus:ring-2 focus:ring-pink-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"

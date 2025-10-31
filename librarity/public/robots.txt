@@ -1,0 +1,13 @@
+# Librarity Robots.txt
+User-agent: *
+Allow: /
+Allow: /subscription/success
+Disallow: /admin/
+Disallow: /api/
+Disallow: /chat/
+
+# Sitemap
+Sitemap: https://librarity.1edu.kz/sitemap.xml
+
+# Crawl-delay for respectful crawling
+Crawl-delay: 1
