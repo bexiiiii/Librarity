@@ -464,7 +464,7 @@ export default function Home() {
   return (
     <div
       className="flex bg-[#11101d] md:h-screen md:overflow-hidden"
-      style={{ minHeight: 'var(--viewport-height, 100dvh)' }}
+      style={{ minHeight: 'var(--viewport-height, 100dvh)', height: 'var(--viewport-height, 100dvh)' }}
     >
       {/* Mobile Menu Overlay */}
       {isMobileMenuOpen && (
