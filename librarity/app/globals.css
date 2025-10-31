@@ -167,6 +167,9 @@
     font-size: 14px;
     /* Smooth scrolling for mobile */
     -webkit-overflow-scrolling: touch;
+    /* Prevent text size adjustment on orientation change */
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
   }
   
   body {
@@ -179,6 +182,11 @@
   .overflow-y-auto {
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-y: contain;
+  }
+
+  /* Prevent zoom on input focus */
+  input, textarea, select {
+    font-size: 16px !important;
   }
 }
 

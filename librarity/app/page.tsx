@@ -90,13 +90,14 @@ export default function Home() {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
         // Небольшая задержка чтобы клавиатура успела открыться
         setTimeout(() => {
-          // Скроллим к концу сообщений
-          messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
-          // Скроллим input в видимую область
-          if (inputRef.current) {
-            inputRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          // Только скроллим чат вниз, не трогаем input
+          if (messagesEndRef.current) {
+            const chatContainer = messagesEndRef.current.closest('.overflow-y-auto');
+            if (chatContainer) {
+              chatContainer.scrollTop = chatContainer.scrollHeight;
+            }
           }
-        }, 300);
+        }, 100);
       }
     };
 
@@ -971,7 +972,8 @@ export default function Home() {
                   onKeyPress={(e) => e.key === "Enter" && !isProcessing && handleSendMessage()}
                   placeholder={isProcessing ? "Ждем завершения обработки..." : "Ask from book ....."}
                   disabled={isProcessing}
-                  className="w-full h-12 md:h-13 bg-[#f7f7f7] border border-black/20 rounded-[23px] pl-12 md:pl-4 pr-12 text-sm outline-none focus:ring-2 focus:ring-pink-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full h-12 md:h-13 bg-[#f7f7f7] border border-black/20 rounded-[23px] pl-12 md:pl-4 pr-12 text-base outline-none focus:ring-2 focus:ring-pink-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{ fontSize: '16px' }}
                 />
                 <button
                   onClick={handleSendMessage}
