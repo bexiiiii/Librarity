@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import ReactMarkdown from "react-markdown";
@@ -81,26 +81,22 @@ export default function Home() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
-    const handleResize = () => {
-      // Обнаруживаем открытие клавиатуры на мобильных устройствах
-      if (window.visualViewport) {
-        const viewportHeight = window.visualViewport.height;
-        // Минимальная высота для чата - 40% от экрана даже когда клавиатура открыта
-        const minChatHeight = Math.max(viewportHeight * 0.4, 200);
-        document.documentElement.style.setProperty('--viewport-height', `${viewportHeight}px`);
-        document.documentElement.style.setProperty('--min-chat-height', `${minChatHeight}px`);
+    const updateViewportMetrics = () => {
+      const viewport = window.visualViewport;
+      const rawHeight = viewport ? viewport.height : window.innerHeight;
+      const offsetTop = viewport ? viewport.offsetTop : 0;
+      const minChatHeight = Math.max(rawHeight * 0.4, 200);
 
-        const keyboardHeight = Math.max(
-          0,
-          window.innerHeight - (window.visualViewport.height + window.visualViewport.offsetTop)
-        );
-        const isOpen = keyboardHeight > 80;
-        document.documentElement.style.setProperty('--keyboard-offset', `${keyboardHeight}px`);
+      document.documentElement.style.setProperty('--viewport-height', `${rawHeight}px`);
+      document.documentElement.style.setProperty('--min-chat-height', `${minChatHeight}px`);
 
-        if (keyboardStateRef.current !== isOpen) {
-          keyboardStateRef.current = isOpen;
-          setIsKeyboardOpen(isOpen);
-        }
+      const keyboardHeight = Math.max(0, window.innerHeight - (rawHeight + offsetTop));
+      document.documentElement.style.setProperty('--keyboard-offset', `${keyboardHeight}px`);
+
+      const isOpen = keyboardHeight > 80;
+      if (keyboardStateRef.current !== isOpen) {
+        keyboardStateRef.current = isOpen;
+        setIsKeyboardOpen(isOpen);
       }
     };
 
@@ -120,19 +116,21 @@ export default function Home() {
     };
 
     if (window.visualViewport) {
-      window.visualViewport.addEventListener('resize', handleResize);
-      window.visualViewport.addEventListener('scroll', handleResize);
+      window.visualViewport.addEventListener('resize', updateViewportMetrics);
+      window.visualViewport.addEventListener('scroll', updateViewportMetrics);
     }
+    window.addEventListener('resize', updateViewportMetrics);
     window.addEventListener('focusin', handleFocusIn);
-    
+
     // Initial setup
-    handleResize();
+    updateViewportMetrics();
 
     return () => {
       if (window.visualViewport) {
-        window.visualViewport.removeEventListener('resize', handleResize);
-        window.visualViewport.removeEventListener('scroll', handleResize);
+        window.visualViewport.removeEventListener('resize', updateViewportMetrics);
+        window.visualViewport.removeEventListener('scroll', updateViewportMetrics);
       }
+      window.removeEventListener('resize', updateViewportMetrics);
       window.removeEventListener('focusin', handleFocusIn);
     };
   }, []);
