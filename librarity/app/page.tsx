@@ -65,6 +65,7 @@ export default function Home() {
     }
     return "book_brain";
   });
+  const [copiedMessageIndex, setCopiedMessageIndex] = useState<number | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -126,6 +127,33 @@ export default function Home() {
       localStorage.setItem('chatMode', chatMode);
     }
   }, [chatMode]);
+
+  // Restore last session on reload
+  useEffect(() => {
+    if (typeof window !== 'undefined' && currentSessionId) {
+      localStorage.setItem('lastSessionId', currentSessionId);
+    }
+  }, [currentSessionId]);
+
+  // Load last session on mount
+  useEffect(() => {
+    const restoreLastSession = async () => {
+      if (typeof window !== 'undefined' && user) {
+        const lastSessionId = localStorage.getItem('lastSessionId');
+        if (lastSessionId && chatSessions.length > 0) {
+          // Check if session still exists
+          const sessionExists = chatSessions.some(s => s.session_id === lastSessionId);
+          if (sessionExists) {
+            await handleChatClick(lastSessionId);
+          }
+        }
+      }
+    };
+
+    if (user && chatSessions.length > 0 && !currentSessionId) {
+      restoreLastSession();
+    }
+  }, [user, chatSessions]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -303,6 +331,16 @@ export default function Home() {
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(true);
+  };
+
+  const handleCopyMessage = async (content: string, index: number) => {
+    try {
+      await navigator.clipboard.writeText(content);
+      setCopiedMessageIndex(index);
+      setTimeout(() => setCopiedMessageIndex(null), 2000);
+    } catch (error) {
+      console.error('Failed to copy:', error);
+    }
   };
 
   const handleDragLeave = () => {
@@ -688,9 +726,9 @@ export default function Home() {
 
         {/* Chat Area or Upload Area */}
         {uploadedBook ? (
-          <div className="flex-1 flex flex-col" style={{ minHeight: 0, height: 'var(--viewport-height, 100dvh)' }}>
+          <div className="flex-1 flex flex-col overflow-hidden">
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-6 space-y-3 max-w-5xl mx-auto w-full" style={{ minHeight: 0 }}>
+            <div className="flex-1 overflow-y-auto p-6 space-y-3 max-w-5xl mx-auto w-full">
               {messages.length === 0 && !isProcessing ? (
                 /* Welcome message when book is ready */
                 <div className="flex flex-col items-center justify-center h-full text-center">
@@ -718,12 +756,12 @@ export default function Home() {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.03 }}
-                    className={`flex ${
+                    className={`flex group ${
                       message.role === "user" ? "justify-end" : "justify-start"
                     }`}
                   >
                     <div
-                      className={`max-w-[85%] rounded-2xl px-4 py-3 ${
+                      className={`relative max-w-[85%] rounded-2xl px-4 py-3 ${
                         message.role === "user"
                           ? "bg-white border border-gray-200 text-black text-right"
                           : "bg-[#f7f7f7] text-black"
@@ -734,27 +772,46 @@ export default function Home() {
                           {message.content}
                         </p>
                       ) : (
-                        <div className="text-base leading-relaxed">
-                          <ReactMarkdown
-                            remarkPlugins={[remarkGfm]}
-                            components={{
-                              p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
-                              strong: ({ children }) => <strong className="font-bold text-gray-900">{children}</strong>,
-                              em: ({ children }) => <em className="italic">{children}</em>,
-                              ul: ({ children }) => <ul className="list-disc list-inside mb-2 space-y-1">{children}</ul>,
-                              ol: ({ children }) => <ol className="list-decimal list-inside mb-2 space-y-1">{children}</ol>,
-                              li: ({ children }) => <li className="ml-2">{children}</li>,
-                              code: ({ children }) => <code className="bg-gray-200 px-1.5 py-0.5 rounded text-sm font-mono">{children}</code>,
-                              pre: ({ children }) => <pre className="bg-gray-800 text-white p-3 rounded-lg overflow-x-auto mb-2">{children}</pre>,
-                              h1: ({ children }) => <h1 className="text-xl font-bold mb-2">{children}</h1>,
-                              h2: ({ children }) => <h2 className="text-lg font-bold mb-2">{children}</h2>,
-                              h3: ({ children }) => <h3 className="text-base font-bold mb-2">{children}</h3>,
-                              blockquote: ({ children }) => <blockquote className="border-l-4 border-pink-500 pl-3 italic my-2">{children}</blockquote>,
-                            }}
+                        <>
+                          <div className="text-base leading-relaxed">
+                            <ReactMarkdown
+                              remarkPlugins={[remarkGfm]}
+                              components={{
+                                p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
+                                strong: ({ children }) => <strong className="font-bold text-gray-900">{children}</strong>,
+                                em: ({ children }) => <em className="italic">{children}</em>,
+                                ul: ({ children }) => <ul className="list-disc list-inside mb-2 space-y-1">{children}</ul>,
+                                ol: ({ children }) => <ol className="list-decimal list-inside mb-2 space-y-1">{children}</ol>,
+                                li: ({ children }) => <li className="ml-2">{children}</li>,
+                                code: ({ children }) => <code className="bg-gray-200 px-1.5 py-0.5 rounded text-sm font-mono">{children}</code>,
+                                pre: ({ children }) => <pre className="bg-gray-800 text-white p-3 rounded-lg overflow-x-auto mb-2">{children}</pre>,
+                                h1: ({ children }) => <h1 className="text-xl font-bold mb-2">{children}</h1>,
+                                h2: ({ children }) => <h2 className="text-lg font-bold mb-2">{children}</h2>,
+                                h3: ({ children }) => <h3 className="text-base font-bold mb-2">{children}</h3>,
+                                blockquote: ({ children }) => <blockquote className="border-l-4 border-pink-500 pl-3 italic my-2">{children}</blockquote>,
+                              }}
+                            >
+                              {message.content}
+                            </ReactMarkdown>
+                          </div>
+                          {/* Copy button */}
+                          <button
+                            onClick={() => handleCopyMessage(message.content, index)}
+                            className="absolute top-2 right-2 p-1.5 rounded-lg bg-white/80 hover:bg-white shadow-sm transition-all opacity-0 group-hover:opacity-100"
+                            title={copiedMessageIndex === index ? "Скопировано!" : "Копировать"}
                           >
-                            {message.content}
-                          </ReactMarkdown>
-                        </div>
+                            {copiedMessageIndex === index ? (
+                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-green-600">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                              </svg>
+                            ) : (
+                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-gray-600">
+                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2" strokeWidth={2} />
+                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" strokeWidth={2} />
+                              </svg>
+                            )}
+                          </button>
+                        </>
                       )}
                     </div>
                   </motion.div>
