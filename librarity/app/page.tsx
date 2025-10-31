@@ -462,7 +462,7 @@ export default function Home() {
   );
 
   return (
-    <div className="flex bg-[#11101d] h-screen overflow-hidden" style={{ minHeight: 'var(--viewport-height, 100dvh)' }}>
+    <div className="flex bg-[#11101d] md:h-screen md:overflow-hidden" style={{ minHeight: 'var(--viewport-height, 100dvh)' }}>
       {/* Mobile Menu Overlay */}
       {isMobileMenuOpen && (
         <div 
@@ -669,7 +669,7 @@ export default function Home() {
       </div>
 
   {/* Main Content Area */}
-  <div className="flex-1 flex flex-col bg-white overflow-hidden">
+  <div className="flex-1 flex flex-col bg-white md:overflow-hidden">
         {/* Header - Mobile & Desktop */}
         <div className="h-14 md:h-16 flex items-center justify-between px-4 md:px-6 border-b border-gray-100 bg-[#11101d] md:bg-white flex-shrink-0">
           {/* Mobile: Hamburger menu */}
@@ -730,9 +730,9 @@ export default function Home() {
 
         {/* Chat Area or Upload Area */}
         {uploadedBook ? (
-          <div className="flex-1 flex flex-col overflow-hidden">
+          <div className="flex-1 flex flex-col md:overflow-hidden">
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-6 space-y-3 max-w-5xl mx-auto w-full">
+            <div className="flex-1 overflow-y-auto p-6 space-y-3 max-w-5xl mx-auto w-full pb-safe">
               {messages.length === 0 && !isProcessing ? (
                 /* Welcome message when book is ready */
                 <div className="flex flex-col items-center justify-center h-full text-center">
