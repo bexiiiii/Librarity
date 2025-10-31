@@ -338,7 +338,6 @@ class PolarService:
         # Create payment record
         payment = Payment(
             user_id=user.id,
-            subscription_id=subscription.id,
             amount=amount / 100 if amount else 0,
             currency="USD",
             status=PaymentStatus.COMPLETED,
@@ -533,7 +532,6 @@ class PolarService:
         # Create payment record
         payment = Payment(
             user_id=user.id,
-            subscription_id=subscription.id,
             amount=amount / 100 if amount else 0,
             currency="USD",
             status=PaymentStatus.COMPLETED,
@@ -583,7 +581,6 @@ class PolarService:
             # Create payment record
             payment = Payment(
                 user_id=subscription.user_id,
-                subscription_id=subscription.id,
                 amount=amount / 100 if amount else 0,
                 currency="USD",
                 status=PaymentStatus.COMPLETED,
@@ -624,7 +621,6 @@ class PolarService:
             # Create failed payment record
             payment = Payment(
                 user_id=subscription.user_id,
-                subscription_id=subscription.id,
                 amount=0,
                 currency="USD",
                 status=PaymentStatus.FAILED,
