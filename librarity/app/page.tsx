@@ -462,7 +462,7 @@ export default function Home() {
   );
 
   return (
-    <div className="flex bg-[#11101d]" style={{ minHeight: 'var(--viewport-height, 100dvh)' }}>
+    <div className="flex bg-[#11101d] h-screen overflow-hidden" style={{ minHeight: 'var(--viewport-height, 100dvh)' }}>
       {/* Mobile Menu Overlay */}
       {isMobileMenuOpen && (
         <div 
@@ -543,6 +543,10 @@ export default function Home() {
               setCurrentSessionId(null);
               setMessages([]);
               setUploadedBook(null);
+              // Очищаем сохраненную сессию из localStorage
+              if (typeof window !== 'undefined') {
+                localStorage.removeItem('lastSessionId');
+              }
             }}
             className="w-full bg-[#ff4ba8] hover:bg-[#ff3b98] text-white py-2 rounded-lg text-sm font-medium transition-colors"
           >
@@ -665,7 +669,7 @@ export default function Home() {
       </div>
 
   {/* Main Content Area */}
-  <div className="flex-1 flex flex-col bg-white" style={{ minHeight: 0, maxHeight: '100vh', overflow: 'hidden' }}>
+  <div className="flex-1 flex flex-col bg-white overflow-hidden">
         {/* Header - Mobile & Desktop */}
         <div className="h-14 md:h-16 flex items-center justify-between px-4 md:px-6 border-b border-gray-100 bg-[#11101d] md:bg-white flex-shrink-0">
           {/* Mobile: Hamburger menu */}
@@ -726,9 +730,9 @@ export default function Home() {
 
         {/* Chat Area or Upload Area */}
         {uploadedBook ? (
-          <div className="flex-1 flex flex-col overflow-hidden" style={{ height: '100%', maxHeight: '100%' }}>
+          <div className="flex-1 flex flex-col overflow-hidden">
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-6 space-y-3 max-w-5xl mx-auto w-full" style={{ minHeight: 0 }}>
+            <div className="flex-1 overflow-y-auto p-6 space-y-3 max-w-5xl mx-auto w-full">
               {messages.length === 0 && !isProcessing ? (
                 /* Welcome message when book is ready */
                 <div className="flex flex-col items-center justify-center h-full text-center">
