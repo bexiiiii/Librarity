@@ -665,9 +665,9 @@ export default function Home() {
       </div>
 
   {/* Main Content Area */}
-  <div className="flex-1 flex flex-col min-h-0 bg-white">
+  <div className="flex-1 flex flex-col bg-white" style={{ minHeight: 0, maxHeight: '100vh', overflow: 'hidden' }}>
         {/* Header - Mobile & Desktop */}
-        <div className="h-14 md:h-16 flex items-center justify-between px-4 md:px-6 border-b border-gray-100 bg-[#11101d] md:bg-white">
+        <div className="h-14 md:h-16 flex items-center justify-between px-4 md:px-6 border-b border-gray-100 bg-[#11101d] md:bg-white flex-shrink-0">
           {/* Mobile: Hamburger menu */}
           <button
             onClick={() => setIsMobileMenuOpen(true)}
