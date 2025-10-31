@@ -463,8 +463,8 @@ export default function Home() {
 
   return (
     <div
-      className="flex bg-[#11101d] overflow-hidden md:h-screen"
-      style={{ minHeight: 'var(--viewport-height, 100dvh)', height: 'var(--viewport-height, 100dvh)' }}
+      className="flex bg-[#11101d] md:h-screen md:overflow-hidden"
+      style={{ minHeight: 'var(--viewport-height, 100dvh)' }}
     >
       {/* Mobile Menu Overlay */}
       {isMobileMenuOpen && (
@@ -672,7 +672,7 @@ export default function Home() {
       </div>
 
   {/* Main Content Area */}
-  <div className="flex-1 flex flex-col bg-white overflow-hidden min-h-0">
+  <div className="flex-1 flex flex-col bg-white md:overflow-hidden min-h-0">
         {/* Header - Mobile & Desktop */}
         <div className="h-14 md:h-16 flex items-center justify-between px-4 md:px-6 border-b border-gray-100 bg-[#11101d] md:bg-white flex-shrink-0">
           {/* Mobile: Hamburger menu */}
@@ -733,7 +733,7 @@ export default function Home() {
 
         {/* Chat Area or Upload Area */}
         {uploadedBook ? (
-          <div className="flex-1 flex flex-col overflow-hidden min-h-0">
+          <div className="flex-1 flex flex-col md:overflow-hidden min-h-0">
             {/* Messages */}
             <div className="flex-1 min-h-0 overflow-y-auto p-6 space-y-3 max-w-5xl mx-auto w-full pb-safe">
               {messages.length === 0 && !isProcessing ? (
