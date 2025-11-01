@@ -81,6 +81,7 @@ class BookResponse(BookBase):
     original_filename: str
     file_type: str
     file_size: int
+    file_url: Optional[str] = None
     total_pages: Optional[int] = None
     total_words: Optional[int] = None
     total_chunks: int

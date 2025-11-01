@@ -293,21 +293,30 @@ async def list_books(
     )
     total = result.scalar()
     
+    # Generate file URLs for each book
+    items = []
+    for book in books:
+        file_url = None
+        try:
+            file_url = await minio_service.get_file_url(book.file_path, expires=3600)
+        except Exception as e:
+            logger.error("file_url_generation_failed", error=str(e), book_id=str(book.id))
+        
+        items.append({
+            "id": str(book.id),
+            "title": book.title,
+            "author": book.author,
+            "original_filename": book.original_filename,
+            "file_type": book.file_type,
+            "file_size": book.file_size,
+            "file_url": file_url,
+            "is_processed": book.is_processed,
+            "processing_status": book.processing_status,
+            "created_at": book.created_at.isoformat() if book.created_at else None,
+        })
+    
     response_data = {
-        "items": [
-            {
-                "id": str(book.id),
-                "title": book.title,
-                "author": book.author,
-                "original_filename": book.original_filename,
-                "file_type": book.file_type,
-                "file_size": book.file_size,
-                "is_processed": book.is_processed,
-                "processing_status": book.processing_status,
-                "created_at": book.created_at.isoformat() if book.created_at else None,
-            }
-            for book in books
-        ],
+        "items": items,
         "total": total,
         "page": page,
         "page_size": page_size,
@@ -339,7 +348,34 @@ async def get_book(
             detail="Book not found"
         )
     
-    return book
+    # Generate presigned URL for the book file
+    file_url = None
+    try:
+        file_url = await minio_service.get_file_url(book.file_path, expires=3600)
+    except Exception as e:
+        logger.error("file_url_generation_failed", error=str(e), book_id=book_id)
+    
+    # Convert to dict and add file_url
+    book_dict = {
+        "id": book.id,
+        "owner_id": book.owner_id,
+        "title": book.title,
+        "author": book.author,
+        "description": book.description,
+        "original_filename": book.original_filename,
+        "file_type": book.file_type,
+        "file_size": book.file_size,
+        "file_url": file_url,
+        "total_pages": book.total_pages,
+        "total_words": book.total_words,
+        "total_chunks": book.total_chunks,
+        "is_processed": book.is_processed,
+        "processing_status": book.processing_status,
+        "created_at": book.created_at,
+        "processed_at": book.processed_at,
+    }
+    
+    return book_dict
 
 
 @router.delete("/{book_id}", response_model=SuccessResponse)
