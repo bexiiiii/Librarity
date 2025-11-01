@@ -1,14 +1,8 @@
 # OAuth service for Google and GitHub
-import os
 from typing import Optional, Dict
 import httpx
 from fastapi import HTTPException
-
-GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
-GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
-GITHUB_CLIENT_ID = os.getenv("GITHUB_CLIENT_ID")
-GITHUB_CLIENT_SECRET = os.getenv("GITHUB_CLIENT_SECRET")
-FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000")
+from core.config import settings
 
 class OAuthService:
     def __init__(self):
@@ -19,12 +13,12 @@ class OAuthService:
     
     def get_google_auth_url(self, state: str) -> str:
         """Get Google OAuth authorization URL"""
-        redirect_uri = f"{FRONTEND_URL}/auth/callback/google"
+        redirect_uri = f"{settings.FRONTEND_URL}/auth/callback/google"
         scope = "openid email profile"
         
         return (
             f"https://accounts.google.com/o/oauth2/v2/auth?"
-            f"client_id={GOOGLE_CLIENT_ID}&"
+            f"client_id={settings.GOOGLE_CLIENT_ID}&"
             f"redirect_uri={redirect_uri}&"
             f"response_type=code&"
             f"scope={scope}&"
@@ -33,12 +27,12 @@ class OAuthService:
     
     def get_github_auth_url(self, state: str) -> str:
         """Get GitHub OAuth authorization URL"""
-        redirect_uri = f"{FRONTEND_URL}/auth/callback/github"
+        redirect_uri = f"{settings.FRONTEND_URL}/auth/callback/github"
         scope = "read:user user:email"
         
         return (
             f"https://github.com/login/oauth/authorize?"
-            f"client_id={GITHUB_CLIENT_ID}&"
+            f"client_id={settings.GITHUB_CLIENT_ID}&"
             f"redirect_uri={redirect_uri}&"
             f"scope={scope}&"
             f"state={state}"
@@ -46,15 +40,15 @@ class OAuthService:
     
     async def exchange_google_code(self, code: str) -> Dict:
         """Exchange Google authorization code for access token"""
-        redirect_uri = f"{FRONTEND_URL}/auth/callback/google"
+        redirect_uri = f"{settings.FRONTEND_URL}/auth/callback/google"
         
         async with httpx.AsyncClient() as client:
             response = await client.post(
                 self.google_token_url,
                 data={
                     "code": code,
-                    "client_id": GOOGLE_CLIENT_ID,
-                    "client_secret": GOOGLE_CLIENT_SECRET,
+                    "client_id": settings.GOOGLE_CLIENT_ID,
+                    "client_secret": settings.GOOGLE_CLIENT_SECRET,
                     "redirect_uri": redirect_uri,
                     "grant_type": "authorization_code"
                 }
@@ -85,8 +79,8 @@ class OAuthService:
                 self.github_token_url,
                 data={
                     "code": code,
-                    "client_id": GITHUB_CLIENT_ID,
-                    "client_secret": GITHUB_CLIENT_SECRET
+                    "client_id": settings.GITHUB_CLIENT_ID,
+                    "client_secret": settings.GITHUB_CLIENT_SECRET
                 },
                 headers={"Accept": "application/json"}
             )

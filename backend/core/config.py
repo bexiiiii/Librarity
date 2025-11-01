@@ -54,17 +54,28 @@ class Settings(BaseSettings):
     GEMINI_MODEL: str = "gemini-2.0-flash-exp"
     GEMINI_EMBEDDING_MODEL: str = "models/embedding-001"
     
+    # Google OAuth
+    GOOGLE_CLIENT_ID: str = ""
+    GOOGLE_CLIENT_SECRET: str = ""
+    
+    # GitHub OAuth
+    GITHUB_CLIENT_ID: str = ""
+    GITHUB_CLIENT_SECRET: str = ""
+    
+    # Frontend URL
+    FRONTEND_URL: str = "https://lexentai.com"
+    
     # Celery
     CELERY_BROKER_URL: str = ""
     CELERY_RESULT_BACKEND: str = ""
     
     # Polar.sh
     POLAR_API_KEY: str = ""
-    POLAR_ORGANIZATION_ID: str = ""
+    POLAR_ORGANIZATION_ID: str = "a4876397-d18a-4687-b651-8dfcaaa1e380"
     POLAR_WEBHOOK_SECRET: str = ""
-    POLAR_SANDBOX_MODE: bool = True  # Set to False in production
-    POLAR_SERVER: str = "sandbox"  # "sandbox" or "production"
-    POLAR_SUCCESS_URL: str = "http://localhost:3000/subscription/success?checkout_id={CHECKOUT_ID}"
+    POLAR_SANDBOX_MODE: bool = False  # Production mode
+    POLAR_SERVER: str = "production"  # Production server
+    POLAR_SUCCESS_URL: str = "https://lexentai.com/subscription/success?checkout_id={CHECKOUT_ID}"
     
     # MinIO Object Storage
     MINIO_ENDPOINT: str = "api.euroline.storage.1edu.kz"
@@ -91,7 +102,7 @@ class Settings(BaseSettings):
     
     # CORS
     cors_origins: str = Field(
-        default="http://localhost:3000,https://librarity.1edu.kz", 
+        default="http://localhost:3000,https://lexentai.com", 
         alias="CORS_ORIGINS"
     )
     

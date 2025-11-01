@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, desc, and_, or_
 from typing import List, Optional
 from datetime import datetime, timedelta
+import structlog
 
 from core.database import get_db
 from models.user import User, UserRole
@@ -17,6 +18,7 @@ from services.telegram_service import telegram_service
 from services.leaderboard_service import leaderboard_service
 
 router = APIRouter(prefix="/admin", tags=["admin"])
+logger = structlog.get_logger()
 
 async def get_admin_user(current_user: User = Depends(get_current_user)):
     """Verify user has admin role"""
@@ -544,3 +546,38 @@ async def reprocess_book(
     # TODO: Trigger reprocessing task
     
     return {"message": f"Book '{book.title}' queued for reprocessing"}
+
+
+@router.get("/books/{book_id}/download")
+async def admin_download_book(
+    book_id: str,
+    db: AsyncSession = Depends(get_db),
+    admin: User = Depends(get_admin_user)
+):
+    """Generate presigned URL for downloading book file (admin access)"""
+    from services.minio_service import minio_service
+    
+    # Find book
+    result = await db.execute(
+        select(Book).where(Book.id == book_id)
+    )
+    book = result.scalar_one_or_none()
+    
+    if not book:
+        raise HTTPException(status_code=404, detail="Book not found")
+    
+    # Generate presigned URL (valid for 1 hour)
+    try:
+        url = await minio_service.get_file_url(book.file_path, expires=3600)
+        return {
+            "download_url": url, 
+            "filename": book.original_filename or f"{book.title}.{book.file_type}",
+            "file_size": book.file_size,
+            "file_type": book.file_type
+        }
+    except Exception as e:
+        logger.error("admin_download_url_generation_failed", book_id=book_id, error=str(e))
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to generate download URL: {str(e)}"
+        )

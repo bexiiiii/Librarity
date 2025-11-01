@@ -736,14 +736,23 @@ class PolarService:
         if not product_id:
             return SubscriptionTier.FREE
         
-        product_id_lower = str(product_id).lower()
+        # Production subscription IDs
+        POLAR_PRO_SUBSCRIPTION_ID = "3c25fade-ff9d-492b-8fbe-30bd51e25156"
+        POLAR_ULTIMATE_SUBSCRIPTION_ID = "ffae7d56-5314-4d67-820c-666e0374c24a"
         
+        if product_id == POLAR_ULTIMATE_SUBSCRIPTION_ID:
+            return SubscriptionTier.ULTIMATE
+        elif product_id == POLAR_PRO_SUBSCRIPTION_ID:
+            return SubscriptionTier.PRO
+        
+        # Fallback: check product name/id string
+        product_id_lower = str(product_id).lower()
         if "ultimate" in product_id_lower:
             return SubscriptionTier.ULTIMATE
         elif "pro" in product_id_lower:
             return SubscriptionTier.PRO
-        else:
-            return SubscriptionTier.FREE
+        
+        return SubscriptionTier.FREE
     
     async def cancel_subscription(self, subscription_id: str) -> bool:
         """Cancel a subscription via Polar API"""
