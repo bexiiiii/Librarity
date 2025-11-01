@@ -1,10 +1,18 @@
 # OAuth Accounts model
-from sqlalchemy import Column, String, DateTime, ForeignKey, Index
+from sqlalchemy import Column, String, DateTime, ForeignKey, Index, Enum as SQLEnum
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from core.database import Base
 import uuid
+import enum
+
+
+class OAuthProvider(str, enum.Enum):
+    """OAuth provider types"""
+    GOOGLE = "google"
+    GITHUB = "github"
+
 
 class OAuthAccount(Base):
     """OAuth provider accounts (Google, GitHub, etc.)"""
