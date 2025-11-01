@@ -9,7 +9,7 @@ export default {
   
   // Landing Page
   landing: {
-    welcome: 'Welcome to',
+    welcome: 'Meet with',
     subtitle: 'Your AI-Powered Book Analysis Assistant',
     description: 'Transform your reading experience with AI. Upload any book and chat with it in 4 intelligent modes.',
     cta: 'Get Started',

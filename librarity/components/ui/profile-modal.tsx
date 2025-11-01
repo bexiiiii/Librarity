@@ -401,7 +401,10 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                                   <motion.button
                                     whileHover={{ scale: 1.05 }}
                                     whileTap={{ scale: 0.95 }}
-                                    onClick={() => window.location.href = '/pricing'}
+                                    onClick={() => {
+                                      setActiveSection('subscription');
+                                      setShowPricingPlans(true);
+                                    }}
                                     className="w-full md:w-auto px-6 py-2 md:py-3 bg-white text-[#ff4ba8] font-semibold text-sm md:text-base rounded-xl hover:bg-white/90 transition-colors"
                                   >
                                     Upgrade
@@ -425,7 +428,7 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                             value={promoCode}
                             onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
                             placeholder="Enter your promo code"
-                            className="w-full px-6 py-4 bg-[#27272a] border-2 border-gray-800 rounded-2xl text-white placeholder-gray-500 focus:outline-none focus:border-[#eb6a48] transition-colors text-lg uppercase"
+                            className="w-full px-6 py-4 bg-[#27272a] border-2 border-gray-800 rounded-2xl text-white placeholder-gray-500 focus:outline-none focus:border-[#ff4ba8] transition-colors text-lg uppercase"
                             onKeyPress={(e) => e.key === 'Enter' && handleApplyPromoCode()}
                           />
                           {promoError && (

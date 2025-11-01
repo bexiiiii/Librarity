@@ -77,7 +77,7 @@ export default function AdminLogin() {
       >
         <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
           {/* Header */}
-          <div className="bg-gradient-to-r from-[#eb6a48] to-[#d85a38] p-8 text-center">
+          <div className="bg-gradient-to-r from-[#ff4ba8] to-[#ff4ba8] p-8 text-center">
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
