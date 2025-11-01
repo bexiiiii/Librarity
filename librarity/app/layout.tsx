@@ -53,7 +53,7 @@ export const metadata: Metadata = {
     siteName: "Lexent AI",
     images: [
       {
-        url: "/book 1.png",
+        url: "/meet.png",
         width: 1200,
         height: 630,
         alt: "Lexent AI - AI-Powered Book Chat"
