@@ -154,11 +154,9 @@ async def handle_polar_webhook(
                 detail="Webhook signature headers missing"
             )
         
-        # Verify signature using Standard Webhooks format
+        # Verify signature
         is_valid = await polar_service.verify_webhook_signature(
             body, 
-            webhook_id, 
-            webhook_timestamp, 
             webhook_signature
         )
         if not is_valid:

@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, desc
 from pydantic import BaseModel
 from typing import Optional
-from datetime import datetime, timezone
+from datetime import datetime, timedelta
 
 from core.database import get_db
 from models.user import User
@@ -97,7 +97,7 @@ async def apply_promo_code(
             raise HTTPException(status_code=400, detail="Promo code is not active")
         if promo_code.current_uses >= promo_code.max_uses:
             raise HTTPException(status_code=400, detail="Promo code has reached maximum uses")
-        if datetime.now(timezone.utc) > promo_code.expires_at:
+        if datetime.utcnow() > promo_code.expires_at:
             raise HTTPException(status_code=400, detail="Promo code has expired")
     
     # Record promo code usage
@@ -149,8 +149,8 @@ async def apply_promo_code(
                 has_author_mode=True if promo_code.tier.value != "free" else False,
                 has_coach_mode=True if promo_code.tier.value == "ultimate" else False,
                 has_analytics=True if promo_code.tier.value == "ultimate" else False,
-                current_period_start=datetime.now(timezone.utc),
-                current_period_end=datetime.now(timezone.utc) + timedelta(days=30)
+                current_period_start=datetime.utcnow(),
+                current_period_end=datetime.utcnow() + timedelta(days=30)
             )
             db.add(subscription)
         else:
@@ -164,8 +164,8 @@ async def apply_promo_code(
             subscription.has_author_mode = True if promo_code.tier.value != "free" else False
             subscription.has_coach_mode = True if promo_code.tier.value == "ultimate" else False
             subscription.has_analytics = True if promo_code.tier.value == "ultimate" else False
-            subscription.current_period_start = datetime.now(timezone.utc)
-            subscription.current_period_end = datetime.now(timezone.utc) + timedelta(days=30)
+            subscription.current_period_start = datetime.utcnow()
+            subscription.current_period_end = datetime.utcnow() + timedelta(days=30)
         
         # Create payment record
         payment = Payment(
@@ -176,7 +176,7 @@ async def apply_promo_code(
             payment_method=PaymentMethod.MANUAL,
             subscription_tier=promo_code.tier.value,
             subscription_period="monthly",
-            paid_at=datetime.now(timezone.utc)
+            paid_at=datetime.utcnow()
         )
         db.add(payment)
         
