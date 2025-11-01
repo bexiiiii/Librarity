@@ -52,6 +52,7 @@ class User(Base):
     token_usage = relationship("TokenUsage", back_populates="user", cascade="all, delete-orphan")
     leaderboard = relationship("Leaderboard", back_populates="user", uselist=False, cascade="all, delete-orphan")
     payments = relationship("Payment", back_populates="user", cascade="all, delete-orphan")
+    oauth_accounts = relationship("OAuthAccount", back_populates="user", cascade="all, delete-orphan")
     
     def __repr__(self):
         return f"<User {self.email}>"

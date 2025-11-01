@@ -1,8 +1,8 @@
-# 📚 LIBRARITY — AI BOOK INTELLIGENCE SYSTEM
+# 📚 LEXENT AI — AI BOOK INTELLIGENCE SYSTEM
 
 **Transform Books into Intelligent Conversational Partners**
 
-Librarity is a production-ready AI platform that allows users to upload books and have intelligent conversations with them. Built with cutting-edge AI technology, it offers multiple interaction modes including Book Brain, Author Mode, Citation Mode, and AI Coaching.
+Lexent AI is a production-ready AI platform that allows users to upload books and have intelligent conversations with them. Built with cutting-edge AI technology, it offers multiple interaction modes including Book Brain, Author Mode, Citation Mode, and AI Coaching.
 
 ## 🎯 Key Features
 
@@ -55,7 +55,7 @@ Librarity is a production-ready AI platform that allows users to upload books an
 
 ### 1. Clone Repository
 ```bash
-cd librarity
+cd lexent-ai
 ```
 
 ### 2. Backend Setup
@@ -93,7 +93,7 @@ from services.auth_service import auth_service
 
 db = SessionLocal()
 admin = User(
-    email='admin@librarity.com',
+    email='admin@lexentai.com',
     username='admin',
     full_name='Admin User',
     hashed_password=auth_service.get_password_hash('admin123'),
@@ -115,7 +115,7 @@ print('Admin user created!')
 ## 📁 Project Structure
 
 ```
-librarity/
+lexent-ai/
 ├── backend/
 │   ├── main.py                 # FastAPI application
 │   ├── core/
@@ -338,12 +338,12 @@ This project is licensed under the MIT License.
 
 ## 📞 Support
 
-- **Email**: support@librarity.com
-- **Documentation**: https://docs.librarity.com
+- **Email**: support@lexentai.com
+- **Website**: https://lexentai.com
 - **Issues**: GitHub Issues
 
 ---
 
-**Built with ❤️ by the Librarity Team**
+**Built with ❤️ by the Lexent AI Team**
 
 *Transforming books into intelligent companions, one conversation at a time.*

@@ -28,9 +28,9 @@ export async function generateStaticParams() {
 export async function generateMetadata({ 
   params 
 }: { 
-  params: { lang: Locale } 
+  params: Promise<{ lang: Locale }> 
 }): Promise<Metadata> {
-  const lang = params.lang;
+  const { lang } = await params;
   
   const titles = {
     en: "Lexent AI - Chat with Your Books Using AI",
@@ -92,13 +92,15 @@ export async function generateMetadata({
   };
 }
 
-export default function LocaleLayout({
+export default async function LocaleLayout({
   children,
   params,
 }: Readonly<{
   children: React.ReactNode;
-  params: { lang: Locale };
+  params: Promise<{ lang: Locale }>;
 }>) {
+  const { lang } = await params;
+  
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
@@ -143,7 +145,7 @@ export default function LocaleLayout({
   };
 
   return (
-    <html lang={params.lang} suppressHydrationWarning>
+    <html lang={lang} suppressHydrationWarning>
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
