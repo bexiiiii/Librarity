@@ -273,7 +273,6 @@ async def google_oauth_callback(
             oauth_account.access_token = access_token
             oauth_account.refresh_token = token_data.get("refresh_token")
             oauth_account.token_expires_at = datetime.utcnow()
-            oauth_account.last_login = datetime.utcnow()
             
             await db.commit()
             await db.refresh(oauth_account)
@@ -305,10 +304,9 @@ async def google_oauth_callback(
                     provider_user_id=google_id,
                     access_token=access_token,
                     refresh_token=token_data.get("refresh_token"),
-                    email=email,
-                    display_name=name,
-                    profile_picture_url=picture,
-                    last_login=datetime.utcnow()
+                    provider_email=email,
+                    provider_name=name,
+                    avatar_url=picture
                 )
                 db.add(new_oauth_account)
                 
@@ -332,10 +330,9 @@ async def google_oauth_callback(
                     provider_user_id=google_id,
                     access_token=access_token,
                     refresh_token=token_data.get("refresh_token"),
-                    email=email,
-                    display_name=name,
-                    profile_picture_url=picture,
-                    last_login=datetime.utcnow()
+                    provider_email=email,
+                    provider_name=name,
+                    avatar_url=picture
                 )
                 db.add(new_oauth_account)
                 
