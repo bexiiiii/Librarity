@@ -7,12 +7,14 @@ import { Label } from '@/components/ui/label'
 import { useState } from 'react'
 import api from '@/lib/api'
 import { useRouter } from 'next/navigation'
+import { useTranslation } from '@/i18n/use-translation'
 
 interface CardDemoProps {
   onSuccess?: () => void;
 }
 
 const CardDemo = ({ onSuccess }: CardDemoProps) => {
+  const { t } = useTranslation();
   const [mode, setMode] = useState<'login' | 'register'>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -21,6 +23,30 @@ const CardDemo = ({ onSuccess }: CardDemoProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const router = useRouter();
+
+  const handleGoogleAuth = async () => {
+    setIsLoading(true);
+    setError('');
+    
+    try {
+      const response = await api.initGoogleOAuth();
+      const { auth_url, state } = response;
+      
+      // Сохраняем state для проверки CSRF
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('oauth_state', state);
+        // Сохраняем информацию о том, что мы в модалке
+        if (onSuccess) {
+          localStorage.setItem('oauth_modal', 'true');
+        }
+        // Перенаправляем на Google
+        window.location.href = auth_url;
+      }
+    } catch (err: any) {
+      setError(t.auth.googleError);
+      setIsLoading(false);
+    }
+  };
 
     const handleAuthSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,7 +67,7 @@ const CardDemo = ({ onSuccess }: CardDemoProps) => {
       } else {
         // Регистрация
         if (password !== confirmPassword) {
-          setError('Пароли не совпадают');
+          setError(t.auth.passwordMismatch);
           setIsLoading(false);
           return;
         }
@@ -59,7 +85,7 @@ const CardDemo = ({ onSuccess }: CardDemoProps) => {
       }
     } catch (err: any) {
       const errorMessage = err.message || err.response?.data?.message || 
-        (mode === 'login' ? 'Ошибка входа. Проверьте данные.' : 'Ошибка регистрации. Попробуйте снова.');
+        (mode === 'login' ? t.auth.loginError : t.auth.registerError);
       setError(errorMessage);
     } finally {
       setIsLoading(false);
@@ -69,11 +95,11 @@ const CardDemo = ({ onSuccess }: CardDemoProps) => {
   return (
     <Card className='w-full border-0 shadow-none bg-transparent'>
       <CardHeader>
-        <CardTitle>{mode === 'login' ? 'Войти в аккаунт' : 'Создать аккаунт'}</CardTitle>
+        <CardTitle>{mode === 'login' ? t.auth.loginTitle : t.auth.registerTitle}</CardTitle>
         <CardDescription>
           {mode === 'login' 
-            ? 'Введите свой email для входа в аккаунт' 
-            : 'Введите данные для создания нового аккаунта'}
+            ? t.auth.loginDescription
+            : t.auth.registerDescription}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -87,11 +113,11 @@ const CardDemo = ({ onSuccess }: CardDemoProps) => {
             
             {mode === 'register' && (
               <div className='grid gap-2'>
-                <Label htmlFor='fullName'>Полное имя</Label>
+                <Label htmlFor='fullName'>{t.auth.fullName}</Label>
                 <Input 
                   id='fullName' 
                   type='text' 
-                  placeholder='Иван Иванов'
+                  placeholder={t.auth.fullName}
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   required
@@ -101,7 +127,7 @@ const CardDemo = ({ onSuccess }: CardDemoProps) => {
             )}
             
             <div className='grid gap-2'>
-              <Label htmlFor='email'>Email</Label>
+              <Label htmlFor='email'>{t.auth.email}</Label>
               <Input 
                 id='email' 
                 type='email' 
@@ -115,10 +141,10 @@ const CardDemo = ({ onSuccess }: CardDemoProps) => {
             
             <div className='grid gap-2'>
               <div className='flex items-center'>
-                <Label htmlFor='password'>Пароль</Label>
+                <Label htmlFor='password'>{t.auth.password}</Label>
                 {mode === 'login' && (
                   <a href='#' className='ml-auto inline-block text-sm underline-offset-4 hover:underline'>
-                    Забыли пароль?
+                    {t.auth.forgotPassword}
                   </a>
                 )}
               </div>
@@ -129,13 +155,13 @@ const CardDemo = ({ onSuccess }: CardDemoProps) => {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 disabled={isLoading}
-                placeholder={mode === 'register' ? 'Минимум 6 символов' : ''}
+                placeholder={mode === 'register' ? t.auth.password : ''}
               />
             </div>
             
             {mode === 'register' && (
               <div className='grid gap-2'>
-                <Label htmlFor='confirmPassword'>Подтвердите пароль</Label>
+                <Label htmlFor='confirmPassword'>{t.auth.confirmPassword}</Label>
                 <Input 
                   id='confirmPassword' 
                   type='password'
@@ -143,7 +169,7 @@ const CardDemo = ({ onSuccess }: CardDemoProps) => {
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   required
                   disabled={isLoading}
-                  placeholder='Повторите пароль'
+                  placeholder={t.auth.confirmPassword}
                 />
               </div>
             )}
@@ -155,16 +181,22 @@ const CardDemo = ({ onSuccess }: CardDemoProps) => {
               disabled={isLoading}
             >
               {isLoading 
-                ? (mode === 'login' ? 'Вход...' : 'Регистрация...') 
-                : (mode === 'login' ? 'Войти' : 'Зарегистрироваться')}
+                ? (mode === 'login' ? t.auth.loggingIn : t.auth.registering) 
+                : (mode === 'login' ? t.auth.loginButton : t.auth.registerButton)}
             </Button>
-            <Button variant='outline' className='w-full' type='button' disabled={isLoading}>
-              {mode === 'login' ? 'Войти через Google' : 'Регистрация через Google'}
+            <Button 
+              variant='outline' 
+              className='w-full' 
+              type='button' 
+              disabled={isLoading}
+              onClick={handleGoogleAuth}
+            >
+              {t.auth.googleAuth}
             </Button>
             <div className='mt-4 text-center text-sm'>
               {mode === 'login' ? (
                 <>
-                  Нет аккаунта?{' '}
+                  {t.auth.noAccount}{' '}
                   <button 
                     type='button'
                     onClick={() => {
@@ -173,12 +205,12 @@ const CardDemo = ({ onSuccess }: CardDemoProps) => {
                     }}
                     className='underline underline-offset-4 hover:text-[#ff4ba8]'
                   >
-                    Зарегистрироваться
+                    {t.auth.register}
                   </button>
                 </>
               ) : (
                 <>
-                  Уже есть аккаунт?{' '}
+                  {t.auth.hasAccount}{' '}
                   <button 
                     type='button'
                     onClick={() => {
@@ -187,7 +219,7 @@ const CardDemo = ({ onSuccess }: CardDemoProps) => {
                     }}
                     className='underline underline-offset-4 hover:text-[#ff4ba8]'
                   >
-                    Войти
+                    {t.auth.login}
                   </button>
                 </>
               )}

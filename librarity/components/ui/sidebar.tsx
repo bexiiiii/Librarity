@@ -21,6 +21,7 @@ import {
 import { Button } from './button';
 import Link from 'next/link';
 import { ProfileModal } from './profile-modal';
+import { useTranslation } from '@/i18n/use-translation';
 
 interface ChatSession {
   session_id: string;
@@ -41,6 +42,7 @@ interface SidebarProps {
 }
 
 export function Sidebar({ onNewChat, onSelectChat, isOpen, onToggle, setIsOpen, user: propsUser, subscription: propsSubscription }: SidebarProps) {
+  const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState('');
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [chatSessions, setChatSessions] = useState<ChatSession[]>([]);
@@ -216,7 +218,7 @@ export function Sidebar({ onNewChat, onSelectChat, isOpen, onToggle, setIsOpen, 
                 >
                   <Book className="w-6 h-6 text-white" />
                 </motion.div>
-                <h1 className="text-2xl font-semibold text-white">Librarity</h1>
+                <h1 className="text-2xl font-semibold text-white font-[family-name:var(--font-advercase)]">Lexent AI</h1>
               </div>
 
               {/* Search */}
@@ -224,7 +226,7 @@ export function Sidebar({ onNewChat, onSelectChat, isOpen, onToggle, setIsOpen, 
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
                 <input
                   type="text"
-                  placeholder="search"
+                  placeholder={t.common.search.toLowerCase()}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className={cn(
@@ -251,14 +253,14 @@ export function Sidebar({ onNewChat, onSelectChat, isOpen, onToggle, setIsOpen, 
                     animate={{ opacity: 1, x: 0 }}
                   >
                     <Plus className="w-5 h-5 text-white flex-shrink-0" />
-                    <span className="text-sm font-medium text-white">New chat</span>
+                    <span className="text-sm font-medium text-white">{t.sidebar.newChat}</span>
                   </motion.button>
                 )}
 
                 {/* Chats Section */}
                 <div>
                   <h3 className="text-sm font-semibold text-white mb-3 px-2">
-                    Chats
+                    {t.sidebar.chats}
                   </h3>
                   <div className="space-y-2">
                   {/* Chat List */}
@@ -270,7 +272,7 @@ export function Sidebar({ onNewChat, onSelectChat, isOpen, onToggle, setIsOpen, 
                     <div className="text-center py-8">
                       <MessageSquare className="w-8 h-8 text-white/20 mx-auto mb-2" />
                       <p className="text-xs text-white/40">
-                        {searchQuery ? 'Ничего не найдено' : 'Пока нет чатов'}
+                        {searchQuery ? 'Ничего не найдено' : t.sidebar.noChats}
                       </p>
                     </div>
                   ) : (
@@ -309,15 +311,16 @@ export function Sidebar({ onNewChat, onSelectChat, isOpen, onToggle, setIsOpen, 
                   transition={{ delay: 0.3 }}
                   className="bg-[#eb6a48] rounded-2xl p-6 space-y-4"
                 >
-                  <h3 className="text-2xl font-semibold text-white">Pro Plan</h3>
+                  <h3 className="text-2xl font-semibold text-white font-[family-name:var(--font-advercase)]">Lexent AI</h3>
+                  <h3 className="text-xl font-semibold text-white">{t.subscription.pro} {t.subscription.plan}</h3>
                   <div className="text-base text-white leading-relaxed">
-                    <p>More books</p>
-                    <p>More possibilities</p>
+                    <p>{t.common.moreBooks}</p>
+                    <p>{t.common.morePossibilities}</p>
                   </div>
                   <div className="flex items-center justify-between">
                     <div className="text-white">
-                      <span className="text-base font-medium">10$</span>
-                      <span className="text-base font-light"> / month</span>
+                      <span className="text-base font-medium">$10</span>
+                      <span className="text-base font-light">{t.common.perMonth}</span>
                     </div>
                     <Link href="/pricing">
                       <motion.button
@@ -325,7 +328,7 @@ export function Sidebar({ onNewChat, onSelectChat, isOpen, onToggle, setIsOpen, 
                         whileTap={{ scale: 0.95 }}
                         className="px-6 py-2 bg-white text-black font-semibold rounded-xl"
                       >
-                        Get
+                        {t.common.get}
                       </motion.button>
                     </Link>
                   </div>

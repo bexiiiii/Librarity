@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, User, Mail, Calendar, LogOut, Settings, Crown } from 'lucide-react';
 import api from '@/lib/api';
 import { cn } from '@/lib/utils';
+import { useTranslation } from '@/i18n/use-translation';
 
 interface ProfileModalProps {
   isOpen: boolean;
@@ -12,6 +13,7 @@ interface ProfileModalProps {
 }
 
 export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
+  const { t } = useTranslation();
   const [user, setUser] = useState<any>(null);
   const [subscription, setSubscription] = useState<any>(null);
   const [billingHistory, setBillingHistory] = useState<any[]>([]);
@@ -207,7 +209,7 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                   )}
                 >
                   <User className="w-5 h-5" />
-                  <span className="font-medium">Account</span>
+                  <span className="font-medium">{t.sidebar.profile}</span>
                 </motion.button>
 
                 <motion.button
@@ -221,7 +223,7 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                   )}
                 >
                   <Crown className="w-5 h-5" />
-                  <span className="font-medium">Subscription</span>
+                  <span className="font-medium">{t.profile.subscription}</span>
                 </motion.button>
 
                 <motion.button
@@ -273,7 +275,7 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                   className="w-full flex items-center gap-2 px-4 py-3 text-gray-400 hover:text-white transition-colors"
                 >
                   <LogOut className="w-5 h-5" />
-                  <span className="font-medium">Log out</span>
+                  <span className="font-medium">{t.sidebar.logout}</span>
                 </motion.button>
               </div>
             </div>
@@ -293,7 +295,7 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                     )}
                   >
                     <User className="w-4 h-4 mx-auto mb-1" />
-                    Account
+                    {t.sidebar.profile}
                   </button>
                   <button
                     onClick={() => setActiveSection('subscription')}
@@ -305,7 +307,7 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                     )}
                   >
                     <Crown className="w-4 h-4 mx-auto mb-1" />
-                    Subscription
+                    {t.profile.subscription}
                   </button>
                   <button
                     onClick={() => setActiveSection('promocode')}
@@ -850,7 +852,7 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                     className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-red-900/20 text-red-400 border-2 border-red-900/50 rounded-xl hover:bg-red-900/30 transition-colors font-semibold"
                   >
                     <LogOut className="w-5 h-5" />
-                    <span>Log out</span>
+                    <span>{t.sidebar.logout}</span>
                   </motion.button>
                 </div>
               </div>
