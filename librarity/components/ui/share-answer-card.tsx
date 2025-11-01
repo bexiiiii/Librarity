@@ -52,7 +52,7 @@ export function ShareAnswerCard({
     if (!dataUrl) return;
 
     const link = document.createElement('a');
-    link.download = `librarity-${bookTitle.toLowerCase().replace(/\s+/g, '-')}.png`;
+    link.download = `lexentai-${bookTitle.toLowerCase().replace(/\s+/g, '-')}.png`;
     link.href = dataUrl;
     link.click();
   };
@@ -64,7 +64,7 @@ export function ShareAnswerCard({
     // Convert data URL to blob
     const response = await fetch(dataUrl);
     const blob = await response.blob();
-    const file = new File([blob], 'librarity-share.png', { type: 'image/png' });
+    const file = new File([blob], 'lexentai-share.png', { type: 'image/png' });
 
     // Try native share API
     if (navigator.share) {
@@ -84,7 +84,7 @@ export function ShareAnswerCard({
   };
 
   const handleCopyLink = async () => {
-    const text = `💡 "${question}"\n\n📚 From "${bookTitle}"${bookAuthor ? ` by ${bookAuthor}` : ''}\n\nChat with books using AI at librarity.com`;
+    const text = `💡 "${question}"\n\n📚 From "${bookTitle}"${bookAuthor ? ` by ${bookAuthor}` : ''}\n\nChat with books using AI at lexentai.com`;
     
     try {
       await navigator.clipboard.writeText(text);
@@ -143,7 +143,7 @@ export function ShareAnswerCard({
                         <span className="text-sm">📚</span>
                       </div>
                       <div>
-                        <h1 className="text-lg font-bold text-white">librarity</h1>
+                        <h1 className="text-lg font-bold text-white">Lexent AI</h1>
                       </div>
                     </div>
                   </div>
@@ -178,7 +178,7 @@ export function ShareAnswerCard({
 
                   {/* Footer */}
                   <div className="relative z-10 text-center">
-                    <p className="text-[0.4rem] font-semibold text-white">librarity.com</p>
+                    <p className="text-[0.4rem] font-semibold text-white">lexentai.com</p>
                   </div>
                 </div>
               </div>
@@ -289,7 +289,7 @@ export function ShareAnswerCard({
                     <span className="text-4xl font-bold text-white">📚</span>
                   </div>
                   <div>
-                    <h1 className="text-5xl font-bold text-white">librarity</h1>
+                    <h1 className="text-5xl font-bold text-white">Lexent AI</h1>
                     <p className="text-2xl text-white/80">AI Book Chat</p>
                   </div>
                 </div>
@@ -326,7 +326,7 @@ export function ShareAnswerCard({
               {/* Footer */}
               <div className="relative z-10 text-center">
                 <p className="text-3xl font-semibold text-white">
-                  librarity.com
+                  lexentai.com
                 </p>
                 <p className="text-2xl text-white/70 mt-3">
                   Chat with any book using AI

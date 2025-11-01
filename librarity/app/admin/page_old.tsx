@@ -99,7 +99,7 @@ export default function AdminDashboard() {
               <Shield className="w-8 h-8 text-primary" />
               <div>
                 <h1 className="text-2xl font-bold">Admin Dashboard</h1>
-                <p className="text-sm text-muted-foreground">Librarity System Management</p>
+                <p className="text-sm text-muted-foreground">Lexent AI System Management</p>
               </div>
             </div>
             <div className="flex items-center gap-2">

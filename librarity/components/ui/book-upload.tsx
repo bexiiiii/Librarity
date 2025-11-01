@@ -163,7 +163,7 @@ export function BookUpload({ onUploadSuccess, onClose }: BookUploadProps) {
           <div className="relative z-10">
             <h3 className="text-lg font-semibold text-white mb-2 flex items-center gap-2">
               <span className="text-2xl">👋</span>
-              Welcome to Librarity!
+              Welcome to Lexent AI!
             </h3>
             <p className="text-sm text-white/70 leading-relaxed">
               Transform your reading experience with AI-powered insights. Upload your book and start having intelligent conversations about its content. Ask questions, get summaries, and dive deeper into any topic.

@@ -1,5 +1,5 @@
 /**
- * API Client for Librarity Backend
+ * API Client for Lexent AI Backend
  */
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
@@ -82,6 +82,19 @@ class APIClient {
 
   async logout() {
     this.clearToken();
+  }
+
+  // Google OAuth endpoints
+  async initGoogleOAuth() {
+    return this.request('/auth/oauth/google');
+  }
+
+  async handleGoogleCallback(code: string, state: string) {
+    const data = await this.request(`/auth/oauth/google/callback?code=${code}&state=${state}`, {
+      method: 'GET',
+    });
+    this.setToken(data.access_token);
+    return data;
   }
 
   // Books endpoints

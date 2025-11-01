@@ -87,7 +87,7 @@ export default function AdminLogin() {
               <Shield className="w-10 h-10 text-[#eb6a48]" />
             </motion.div>
             <h1 className="text-3xl font-bold text-white mb-2">Admin Portal</h1>
-            <p className="text-white/80 text-sm">Librarity System Management</p>
+            <p className="text-white/80 text-sm">Lexent AI System Management</p>
           </div>
 
           {/* Form */}
@@ -118,7 +118,7 @@ export default function AdminLogin() {
                     required
                     disabled={loading}
                     className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#eb6a48]/20 focus:border-[#eb6a48] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                    placeholder="admin@librarity.com"
+                    placeholder="admin@lexentai.com"
                   />
                 </div>
               </div>
@@ -180,7 +180,7 @@ export default function AdminLogin() {
             <div className="mt-8 pt-6 border-t border-gray-200">
               <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
                 <BookOpen className="w-4 h-4" />
-                <span>Librarity Admin System v1.0</span>
+                <span>Lexent AI Admin System v1.0</span>
               </div>
               <p className="text-center text-xs text-gray-400 mt-2">
                 Authorized personnel only

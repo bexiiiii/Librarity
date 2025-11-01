@@ -1,4 +1,4 @@
-# Librarity Robots.txt
+# Lexent AI Robots.txt
 User-agent: *
 Allow: /
 Allow: /subscription/success
@@ -7,7 +7,7 @@ Disallow: /api/
 Disallow: /chat/
 
 # Sitemap
-Sitemap: https://librarity.1edu.kz/sitemap.xml
+Sitemap: https://lexentai.com/sitemap.xml
 
 # Crawl-delay for respectful crawling
 Crawl-delay: 1

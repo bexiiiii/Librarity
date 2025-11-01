@@ -11,6 +11,8 @@ import { BookUpload } from "@/components/ui/book-upload";
 import CardDemo from "@/components/ui/card-studio";
 import { ProfileModal } from "@/components/ui/profile-modal";
 import MobileChatModes from "@/components/ui/mobile-chat-modes";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { useTranslation } from "@/i18n/use-translation";
 import {
   Dialog,
   DialogContent,
@@ -38,6 +40,7 @@ interface User {
 
 export default function Home() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [user, setUser] = useState<User | null>(null);
   const [subscription, setSubscription] = useState<any>(null);
   const [chatSessions, setChatSessions] = useState<ChatSession[]>([]);
@@ -550,9 +553,9 @@ export default function Home() {
         {/* Logo */}
         <div className="pt-6 px-5 mb-6">
           <div className="flex items-center gap-2.5">
-            <Image src="/book 1.png" alt="Librarity Logo" width={40} height={40} />
-            <h1 className="text-white text-2xl font-semibold">
-              Librarity
+            <Image src="/book 1.png" alt="Lexent AI Logo" width={40} height={40} />
+            <h1 className="text-white text-2xl font-semibold font-[family-name:var(--font-advercase)]">
+              Lexent AI
             </h1>
           </div>
         </div>
@@ -671,7 +674,7 @@ export default function Home() {
               <div className="mb-3 relative z-10">
                 <img 
                   src="/book 1.png" 
-                  alt="Librarity" 
+                  alt="Lexent AI" 
                   className="h-8 w-auto"
                 />
               </div>
@@ -746,16 +749,16 @@ export default function Home() {
 
           {/* Desktop: Logo on left */}
           <div className="hidden md:flex items-center gap-2">
-            <Image src="/book 1.png" alt="Librarity Logo" width={40} height={40} />
-            <h1 className="text-gray-900 text-xl font-semibold">
-              Librarity
+            <Image src="/book 1.png" alt="Lexent AI Logo" width={40} height={40} />
+            <h1 className="text-gray-900 text-xl font-semibold font-[family-name:var(--font-advercase)]">
+              Lexent AI
             </h1>
           </div>
 
           {/* Mobile: Logo and current mode in center */}
           <div className="md:hidden absolute left-1/2 transform -translate-x-1/2 text-center">
-            <h1 className="text-white text-lg font-semibold">
-              Librarity
+            <h1 className="text-white text-lg font-semibold font-[family-name:var(--font-advercase)]">
+              Lexent AI
             </h1>
             {uploadedBook && (
               <p className="text-white/60 text-[10px] font-medium mt-0.5">
@@ -769,24 +772,28 @@ export default function Home() {
 
           {/* Desktop: Right side content */}
           <div className="hidden md:flex items-center gap-4">
+            <LanguageSwitcher />
             {!user && !loading && (
               <button
                 onClick={handleLoginClick}
                 className="bg-[#ff4ba8] text-white h-10 px-8 rounded-full text-sm font-semibold hover:bg-[#ff3b98] transition-colors shadow-sm cursor-pointer"
               >
-                Login / Sign up
+                {t.auth.login} / {t.auth.register}
               </button>
             )}
           </div>
 
           {/* Mobile: Login button */}
           {!user && !loading && (
-            <button
-              onClick={handleLoginClick}
-              className="md:hidden bg-white text-[#11101d] h-9 px-6 rounded-full text-sm font-semibold hover:bg-gray-100 transition-colors"
-            >
-              Login
-            </button>
+            <div className="md:hidden flex items-center gap-2">
+              <LanguageSwitcher />
+              <button
+                onClick={handleLoginClick}
+                className="bg-white text-[#11101d] h-9 px-6 rounded-full text-sm font-semibold hover:bg-gray-100 transition-colors"
+              >
+                {t.auth.login}
+              </button>
+            </div>
           )}
         </div>
 
@@ -1146,7 +1153,7 @@ export default function Home() {
               {/* Mobile: Disclaimer text */}
               {!isKeyboardOpen && (
                 <p className="md:hidden text-center text-[11px] text-black/70 mt-2">
-                  Librarity might make mistakes
+                  Lexent AI might make mistakes
                 </p>
               )}
                 </div>
@@ -1159,23 +1166,23 @@ export default function Home() {
             {/* Welcome Message */}
             <div className="text-center max-w-3xl">
               <h1 className="text-3xl md:text-4xl font-bold text-gray-800 mb-4">
-                Welcome to Librarity! 📚
+                {t.landing.welcome} <span className="font-[family-name:var(--font-advercase)]">Lexent AI!</span> 📚
               </h1>
               <p className="text-gray-600 text-base md:text-lg mb-6">
-                Transform your reading experience with AI. Upload any book and chat with it in <br /> <b>4 intelligent modes:</b>
+                {t.landing.description}
               </p>
               <div className="flex flex-wrap justify-center gap-2">
                 <span className="px-4 py-2 bg-[#11101d] text-white rounded-full font-medium text-sm">
-                  📖 Book Brain
+                  {t.landing.modes.bookBrain}
                 </span>
                 <span className="px-4 py-2 bg-[#11101d] text-white rounded-full font-medium text-sm">
-                  ✍️ Author Mode
+                  {t.landing.modes.author}
                 </span>
                 <span className="px-4 py-2 bg-[#11101d] text-white rounded-full font-medium text-sm">
-                  🎯 Coach Mode
+                  {t.landing.modes.coach}
                 </span>
                 <span className="px-4 py-2 bg-[#11101d] text-white rounded-full font-medium text-sm">
-                  📝 With Citations
+                  {t.landing.modes.citation}
                 </span>
               </div>
             </div>

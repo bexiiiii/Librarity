@@ -51,7 +51,7 @@ export function ShareAnswerCard({
     if (!dataUrl) return;
 
     const link = document.createElement('a');
-    link.download = `librarity-${bookTitle.slice(0, 30)}.png`;
+    link.download = `lexentai-${bookTitle.slice(0, 30)}.png`;
     link.href = dataUrl;
     link.click();
   };
@@ -62,12 +62,12 @@ export function ShareAnswerCard({
 
     // Convert to blob for sharing
     const blob = await (await fetch(dataUrl)).blob();
-    const file = new File([blob], 'librarity-share.png', { type: 'image/png' });
+    const file = new File([blob], 'lexentai-share.png', { type: 'image/png' });
 
     if (navigator.share && navigator.canShare?.({ files: [file] })) {
       try {
         await navigator.share({
-          title: 'AI Book Chat - librarity',
+          title: 'AI Book Chat - Lexent AI',
           text: `💡 Check out this insight from "${bookTitle}"!`,
           files: [file],
         });
@@ -120,7 +120,7 @@ export function ShareAnswerCard({
                   <div className="relative z-10">
                     <div className="flex items-center gap-1.5">
                       <Sparkles className="w-4 h-4 text-white" />
-                      <span className="text-sm font-bold text-white">librarity</span>
+                      <span className="text-sm font-bold text-white">Lexent AI</span>
                     </div>
                   </div>
 
@@ -150,7 +150,7 @@ export function ShareAnswerCard({
                         <p className="text-[8px] text-white/80 line-clamp-1">{bookAuthor}</p>
                       )}
                     </div>
-                    <p className="text-center text-[8px] text-white/60 mt-1">librarity.com</p>
+                    <p className="text-center text-[8px] text-white/60 mt-1">lexentai.com</p>
                   </div>
                 </div>
               </div>
@@ -297,7 +297,7 @@ export function ShareAnswerCard({
                   lineHeight: '1',
                 }}
               >
-                librarity
+                Lexent AI
               </span>
             </div>
           </div>
@@ -422,7 +422,7 @@ export function ShareAnswerCard({
                 margin: 0,
               }}
             >
-              librarity.com • Chat with any book using AI
+              lexentai.com • Chat with any book using AI
             </p>
           </div>
         </div>

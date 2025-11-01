@@ -788,7 +788,7 @@ export function AnimatedAIChat({ onUploadClick, uploadedBook, onRemoveBook, curr
                                         animate={{ opacity: 1, y: 0 }}
                                         transition={{ delay: 0.3, duration: 0.6 }}
                                     >
-                                        Welcome to Librarity! 📚
+                                        Welcome to Lexent AI! 📚
                                     </motion.h1>
                                     <motion.p 
                                         className="text-base md:text-lg text-black/60 max-w-xl mx-auto"
@@ -1249,7 +1249,7 @@ export function AnimatedAIChat({ onUploadClick, uploadedBook, onRemoveBook, curr
                         </svg>
                     </motion.button>
 
-                    {/* Login Button or Librarity Text */}
+                    {/* Login Button or Lexent AI Text */}
                     {!isAuthenticated ? (
                         <Dialog>
                             <DialogTrigger asChild>
@@ -1267,7 +1267,7 @@ export function AnimatedAIChat({ onUploadClick, uploadedBook, onRemoveBook, curr
                         </Dialog>
                     ) : (
                         <p className="text-white font-semibold text-base">
-                            Librarity
+                            Lexent AI
                         </p>
                     )}
                 </motion.div>
@@ -1289,7 +1289,7 @@ export function AnimatedAIChat({ onUploadClick, uploadedBook, onRemoveBook, curr
                                     animate={{ opacity: 1, y: 0 }}
                                     transition={{ delay: 0.3, duration: 0.6 }}
                                 >
-                                    Welcome to Librarity! 📚
+                                    Welcome to Lexent AI! 📚
                                 </motion.h1>
                                 <motion.p 
                                     className="text-sm text-black/60"
@@ -1592,7 +1592,7 @@ export function AnimatedAIChat({ onUploadClick, uploadedBook, onRemoveBook, curr
                             </motion.button>
                         </div>
                         <p className="text-center text-[11px] text-black mt-1.5">
-                            Librarity might make mistakes
+                            Lexent AI might make mistakes
                         </p>
                     </div>
                 )}

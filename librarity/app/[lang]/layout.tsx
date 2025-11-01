@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import localFont from "next/font/local";
-import "./globals.css";
+import "../globals.css";
 import { SubscriptionNotifications } from "@/components/SubscriptionNotifications";
+import { i18n, type Locale } from "@/i18n/config";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -15,66 +16,88 @@ const geistMono = Geist_Mono({
 });
 
 const advercase = localFont({
-  src: "../public/fonts/AdvercaseFont-Demo-Regular.otf",
+  src: "../../public/fonts/AdvercaseFont-Demo-Regular.otf",
   variable: "--font-advercase",
   display: "swap",
 });
 
-export const metadata: Metadata = {
-  title: {
-    default: "Lexent AI - Chat with Your Books Using AI",
-    template: "%s | Lexent AI"
-  },
-  description: "Transform the way you read with AI-powered conversations. Upload any book and unlock deeper understanding through intelligent dialogue. From classics to textbooks, your personal AI reading companion awaits.",
-  keywords: [
-    "AI book chat",
-    "book intelligence",
-    "AI reading assistant",
-    "book conversation",
-    "AI book analysis",
-    "intelligent reading",
-    "book discussion AI",
-    "reading comprehension",
-    "book Q&A",
-    "AI literature assistant"
-  ],
-  authors: [{ name: "Lexent AI Team" }],
-  creator: "Lexent AI",
-  publisher: "Lexent AI",
-  metadataBase: new URL("https://lexentai.com"),
-  
-  // Open Graph
-  openGraph: {
-    type: "website",
-    locale: "en_US",
-    title: "Lexent AI - Chat with Your Books Using AI",
-    description: "Transform the way you read with AI-powered conversations. Upload any book and unlock deeper understanding through intelligent dialogue.",
-    url: "https://lexentai.com",
-    siteName: "Lexent AI",
-    images: [
-      {
-        url: "/book 1.png",
-        width: 1200,
-        height: 630,
-        alt: "Lexent AI - AI-Powered Book Chat"
-      }
-    ]
-  },
-  
-  // Twitter Card
-  twitter: {
-    card: "summary_large_image",
-    title: "Lexent AI - Chat with Your Books Using AI",
-    description: "Transform your reading experience with AI-powered conversations",
-    images: ["/twitter-image.png"],
-    creator: "@lexentai"
-  }
-};
+export async function generateStaticParams() {
+  return i18n.locales.map((locale) => ({ lang: locale }));
+}
 
-export default function RootLayout({
+export async function generateMetadata({ 
+  params 
+}: { 
+  params: { lang: Locale } 
+}): Promise<Metadata> {
+  const lang = params.lang;
+  
+  const titles = {
+    en: "Lexent AI - Chat with Your Books Using AI",
+    ru: "Lexent AI - Общайтесь с вашими книгами используя ИИ",
+  };
+  
+  const descriptions = {
+    en: "Transform the way you read with AI-powered conversations. Upload any book and unlock deeper understanding through intelligent dialogue. From classics to textbooks, your personal AI reading companion awaits.",
+    ru: "Трансформируйте способ чтения с помощью разговоров на основе ИИ. Загружайте любую книгу и открывайте более глубокое понимание через интеллектуальный диалог. От классики до учебников, ваш персональный ИИ-компаньон для чтения ждет вас.",
+  };
+
+  return {
+    title: {
+      default: titles[lang],
+      template: `%s | Lexent AI`
+    },
+    description: descriptions[lang],
+    keywords: [
+      "AI book chat",
+      "book intelligence",
+      "AI reading assistant",
+      "book conversation",
+      "AI book analysis",
+      "intelligent reading",
+      "book discussion AI",
+      "reading comprehension",
+      "book Q&A",
+      "AI literature assistant"
+    ],
+    authors: [{ name: "Lexent AI Team" }],
+    creator: "Lexent AI",
+    publisher: "Lexent AI",
+    metadataBase: new URL("https://lexentai.com"),
+    
+    openGraph: {
+      type: "website",
+      locale: lang === 'ru' ? "ru_RU" : "en_US",
+      title: titles[lang],
+      description: descriptions[lang],
+      url: "https://lexentai.com",
+      siteName: "Lexent AI",
+      images: [
+        {
+          url: "/book 1.png",
+          width: 1200,
+          height: 630,
+          alt: "Lexent AI - AI-Powered Book Chat"
+        }
+      ]
+    },
+    
+    twitter: {
+      card: "summary_large_image",
+      title: titles[lang],
+      description: descriptions[lang],
+      images: ["/twitter-image.png"],
+      creator: "@lexentai"
+    }
+  };
+}
+
+export default function LocaleLayout({
   children,
+  params,
 }: Readonly<{
   children: React.ReactNode;
+  params: { lang: Locale };
 }>) {
   const jsonLd = {
     "@context": "https://schema.org",
@@ -120,7 +143,7 @@ export default function RootLayout({
   };
 
   return (
-     <html lang="en"  suppressHydrationWarning>
+    <html lang={params.lang} suppressHydrationWarning>
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -133,7 +156,6 @@ export default function RootLayout({
                   const vh = window.innerHeight * 0.01;
                   document.documentElement.style.setProperty('--vh', vh + 'px');
                   
-                  // Handle visualViewport for better mobile support
                   if (window.visualViewport) {
                     const vvh = window.visualViewport.height * 0.01;
                     document.documentElement.style.setProperty('--vvh', vvh + 'px');

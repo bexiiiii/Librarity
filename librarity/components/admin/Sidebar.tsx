@@ -49,7 +49,7 @@ export function Sidebar({ activeTab, setActiveTab, currentUser, handleLogout }: 
     <div className="w-64 bg-[#1a1d2e] h-screen flex flex-col sticky top-0">
       {/* Logo */}
       <div className="p-6 border-b border-gray-800">
-        <h1 className="text-2xl font-bold text-white">Librarity</h1>
+        <h1 className="text-2xl font-bold text-white font-[family-name:var(--font-advercase)]">Lexent AI</h1>
         <p className="text-sm text-gray-400 mt-1">Admin Panel</p>
       </div>
 
