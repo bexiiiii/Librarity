@@ -163,7 +163,7 @@ app.mount("/uploads", StaticFiles(directory=uploads_dir), name="uploads")
 async def root():
     """Root endpoint"""
     return {
-        "message": "Welcome to Librarity - AI Book Intelligence System",
+        "message": "Welcome to Lexent AI - AI Book Intelligence System",
         "version": "1.0.0",
         "docs": "/api/docs"
     }

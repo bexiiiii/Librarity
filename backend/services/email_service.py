@@ -51,7 +51,7 @@ class EmailService:
         <html>
             <body style="font-family: Arial, sans-serif; background: #0a0a0a; color: #fff; padding: 40px;">
                 <div style="max-width: 600px; margin: 0 auto; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 20px; padding: 40px;">
-                    <h1 style="color: #fff; margin-bottom: 20px;">✨ Welcome to Librarity!</h1>
+                    <h1 style="color: #fff; margin-bottom: 20px;">✨ Welcome to Lexent AI!</h1>
                     <p style="font-size: 18px; line-height: 1.6;">
                         Hi {username},
                     </p>
