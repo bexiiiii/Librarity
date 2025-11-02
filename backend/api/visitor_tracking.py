@@ -223,12 +223,13 @@ async def get_visitor_stats(
     ]
     
     # Daily timeline
+    from sqlalchemy import case
     timeline_result = await db.execute(
         select(
             func.date(AnonymousVisitor.first_visit).label('date'),
             func.count(AnonymousVisitor.id).label('new_visitors'),
             func.sum(
-                func.cast(AnonymousVisitor.converted_to_user, func.Integer)
+                case((AnonymousVisitor.converted_to_user == True, 1), else_=0)
             ).label('conversions')
         )
         .where(AnonymousVisitor.first_visit >= start_date)
@@ -305,10 +306,10 @@ async def get_conversion_funnel(
     # Step 4: Uploaded book (users who have books)
     from models.book import Book
     uploaded_result = await db.execute(
-        select(func.count(func.distinct(Book.user_id))).where(
+        select(func.count(func.distinct(Book.owner_id))).where(
             and_(
                 Book.created_at >= start_date,
-                Book.user_id.in_(
+                Book.owner_id.in_(
                     select(AnonymousVisitor.user_id).where(
                         and_(
                             AnonymousVisitor.first_visit >= start_date,
