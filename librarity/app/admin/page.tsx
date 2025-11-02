@@ -9,6 +9,7 @@ import api from "@/lib/api";
 import { Sidebar } from "@/components/admin/Sidebar";
 import { DashboardTab } from "@/components/admin/DashboardTab";
 import { UsersTab } from "@/components/admin/UsersTab";
+import { VisitorsTab } from "@/components/admin/VisitorsTab";
 import { BooksTab } from "@/components/admin/BooksTab";
 import { AnalyticsTab } from "@/components/admin/AnalyticsTab";
 import { RevenueTab } from "@/components/admin/RevenueTab";
@@ -288,6 +289,7 @@ export default function AdminPage() {
             />
           )}
 
+          {activeTab === "visitors" && <VisitorsTab />}
           {activeTab === "books" && <BooksTab />}
           {activeTab === "analytics" && <AnalyticsTab />}
           {activeTab === "token-usage" && <TokenUsageTab />}
