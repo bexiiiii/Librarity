@@ -3,7 +3,7 @@ Anonymous Visitor tracking model
 Tracks users who visit the site but don't register
 """
 from datetime import datetime
-from sqlalchemy import Column, String, DateTime, Boolean, Integer
+from sqlalchemy import Column, String, DateTime, Boolean, Integer, Text
 from sqlalchemy.dialects.postgresql import UUID
 import uuid
 
@@ -17,7 +17,7 @@ class AnonymousVisitor(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     
     # Visitor identification (fingerprint/session ID from frontend)
-    visitor_id = Column(String, unique=True, nullable=False, index=True)
+    visitor_id = Column(Text, unique=True, nullable=False, index=True)
     
     # Visit information
     first_visit = Column(DateTime, default=datetime.utcnow, nullable=False, index=True)
@@ -29,22 +29,22 @@ class AnonymousVisitor(Base):
     user_id = Column(UUID(as_uuid=True), nullable=True)  # Set when user registers
     
     # Traffic source
-    utm_source = Column(String, nullable=True)
-    utm_medium = Column(String, nullable=True)
-    utm_campaign = Column(String, nullable=True)
-    referrer = Column(String, nullable=True)
+    utm_source = Column(Text, nullable=True)
+    utm_medium = Column(Text, nullable=True)
+    utm_campaign = Column(Text, nullable=True)
+    referrer = Column(Text, nullable=True)
     
     # Device info
-    device_type = Column(String, nullable=True)  # mobile, desktop, tablet
-    browser = Column(String, nullable=True)
-    os = Column(String, nullable=True)
+    device_type = Column(Text, nullable=True)  # mobile, desktop, tablet
+    browser = Column(Text, nullable=True)
+    os = Column(Text, nullable=True)
     
     # Geographic info (optional)
-    country = Column(String, nullable=True)
-    city = Column(String, nullable=True)
+    country = Column(Text, nullable=True)
+    city = Column(Text, nullable=True)
     
     # Pages visited
-    landing_page = Column(String, nullable=True)
+    landing_page = Column(Text, nullable=True)
     pages_visited = Column(Integer, default=1, nullable=False)
     
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
