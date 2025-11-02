@@ -16,6 +16,9 @@ import asyncio
 
 from core.config import settings
 from models.book import Book
+from models.user import User
+from models.oauth_account import OAuthAccount
+from models.subscription import Subscription
 from services.langchain_service import rag_pipeline
 from services.minio_service import minio_service
 
