@@ -208,6 +208,14 @@ async def upload_book(
                    book_id=str(existing_book.id), 
                    user_id=str(current_user.id),
                    file_hash=file_hash)
+        
+        # If book is not processed yet, trigger processing
+        if not existing_book.is_processed and existing_book.processing_status != "processing":
+            task = process_book_task.delay(str(existing_book.id))
+            logger.info("celery_task_sent_for_existing_book", 
+                       book_id=str(existing_book.id), 
+                       task_id=str(task.id))
+        
         # Return existing book instead of error
         return existing_book
     
