@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS anonymous_visitors (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     
     -- Visitor identification
-    visitor_id VARCHAR NOT NULL UNIQUE,
+    visitor_id TEXT NOT NULL UNIQUE,
     
     -- Visit tracking
     first_visit TIMESTAMP NOT NULL DEFAULT NOW(),
@@ -17,22 +17,22 @@ CREATE TABLE IF NOT EXISTS anonymous_visitors (
     user_id UUID REFERENCES users(id) ON DELETE SET NULL,
     
     -- Traffic source
-    utm_source VARCHAR,
-    utm_medium VARCHAR,
-    utm_campaign VARCHAR,
-    referrer VARCHAR,
+    utm_source TEXT,
+    utm_medium TEXT,
+    utm_campaign TEXT,
+    referrer TEXT,
     
     -- Device info
-    device_type VARCHAR,
-    browser VARCHAR,
-    os VARCHAR,
+    device_type TEXT,
+    browser TEXT,
+    os TEXT,
     
     -- Geographic info (optional)
-    country VARCHAR,
-    city VARCHAR,
+    country TEXT,
+    city TEXT,
     
     -- Engagement
-    landing_page VARCHAR,
+    landing_page TEXT,
     pages_visited INTEGER NOT NULL DEFAULT 1,
     
     -- Timestamps
