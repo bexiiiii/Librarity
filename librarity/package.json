@@ -14,6 +14,7 @@
     "npm": "10.x"
   },
   "dependencies": {
+    "@fingerprintjs/fingerprintjs": "^5.0.1",
     "@formatjs/intl-localematcher": "^0.6.2",
     "@radix-ui/react-avatar": "^1.1.10",
     "@radix-ui/react-dialog": "^1.1.15",

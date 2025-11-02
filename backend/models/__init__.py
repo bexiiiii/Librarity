@@ -12,6 +12,7 @@ from models.usage_log import UsageLog
 from models.payment import Payment, PaymentStatus, PaymentMethod
 from models.leaderboard import Leaderboard
 from models.user_session import UserSession, UserReferral
+from models.visitor import AnonymousVisitor
 
 __all__ = [
     "User",
@@ -36,4 +37,5 @@ __all__ = [
     "Leaderboard",
     "UserSession",
     "UserReferral",
+    "AnonymousVisitor",
 ]

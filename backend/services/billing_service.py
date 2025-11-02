@@ -162,7 +162,7 @@ class BillingService:
                 to=user.email,
                 subject="🎉 Your Free Trial Has Started!",
                 html=f"""
-                <h2>Welcome to Librarity PRO!</h2>
+                <h2>Welcome to Lexent AI PRO!</h2>
                 <p>You now have {trial_days} days of free PRO access with:</p>
                 <ul>
                     <li>100,000 tokens</li>

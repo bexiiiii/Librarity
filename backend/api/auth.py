@@ -61,6 +61,36 @@ async def get_current_user(
     return user
 
 
+# Optional authentication - returns None if not authenticated
+async def get_current_user_optional(
+    token: str = Depends(OAuth2PasswordBearer(tokenUrl="/api/auth/login", auto_error=False)),
+    db: AsyncSession = Depends(get_db)
+) -> User | None:
+    """Get current user if authenticated, otherwise return None"""
+    
+    if not token:
+        return None
+    
+    try:
+        payload = auth_service.decode_token(token)
+        user_id = payload.get("sub")
+        
+        if not user_id:
+            return None
+        
+        result = await db.execute(
+            select(User).where(User.id == user_id)
+        )
+        user = result.scalar_one_or_none()
+        
+        if not user or not user.is_active:
+            return None
+        
+        return user
+    except:
+        return None
+
+
 @router.post("/register", response_model=TokenResponse, status_code=status.HTTP_201_CREATED)
 async def register(
     user_data: UserCreate,

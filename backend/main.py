@@ -13,7 +13,7 @@ import os
 
 from core.config import settings
 from core.database import engine, Base
-from api import auth, books, chat, subscription, admin, analytics, revenue, billing, polar_api, fix_subscription
+from api import auth, books, chat, subscription, admin, analytics, revenue, billing, polar_api, fix_subscription, visitor_tracking
 from api import admin_extended
 from core.logging_config import setup_logging
 
@@ -150,6 +150,7 @@ app.include_router(admin.router, prefix="/api/admin", tags=["Admin"])
 app.include_router(admin_extended.router, prefix="/api/admin", tags=["Admin Extended"])
 app.include_router(analytics.router, prefix="/api", tags=["Analytics"])
 app.include_router(revenue.router, prefix="/api", tags=["Revenue & Payments"])
+app.include_router(visitor_tracking.router, tags=["Visitor Tracking"])
 
 # Mount uploads directory for serving files.
 # Use a single project-level uploads directory so both FastAPI and Celery
