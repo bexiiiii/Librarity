@@ -8,6 +8,7 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Users, TrendingUp, Target, Monitor, Smartphone, Globe } from 'lucide-react';
+import api from '@/lib/api';
 
 interface VisitorStats {
   period_days: number;
@@ -47,23 +48,13 @@ export function VisitorsTab() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
-      
-      const [statsRes, funnelRes] = await Promise.all([
-        fetch(`/api/tracking/stats?days=${days}`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        }),
-        fetch(`/api/tracking/funnel?days=${days}`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        })
+      const [statsData, funnelData] = await Promise.all([
+        api.getVisitorStats(days),
+        api.getVisitorFunnel(days)
       ]);
 
-      if (statsRes.ok && funnelRes.ok) {
-        const statsData = await statsRes.json();
-        const funnelData = await funnelRes.json();
-        setStats(statsData);
-        setFunnel(funnelData);
-      }
+      setStats(statsData);
+      setFunnel(funnelData);
     } catch (error) {
       console.error('Failed to fetch visitor analytics:', error);
     } finally {

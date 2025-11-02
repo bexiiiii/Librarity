@@ -477,6 +477,15 @@ class APIClient {
       method: 'POST',
     });
   }
+
+  // Visitor Tracking Analytics
+  async getVisitorStats(days = 30) {
+    return this.request(`/tracking/stats?days=${days}`);
+  }
+
+  async getVisitorFunnel(days = 30) {
+    return this.request(`/tracking/funnel?days=${days}`);
+  }
 }
 
 const api = new APIClient(API_BASE_URL);
