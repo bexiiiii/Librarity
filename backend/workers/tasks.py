@@ -84,6 +84,24 @@ def process_book_task(self, book_id: str):
         book.processing_status = "processing"
         db.commit()
         
+        # Check if file exists in MinIO before downloading
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        file_exists = loop.run_until_complete(minio_service.file_exists(book.file_path))
+        loop.close()
+        
+        if not file_exists:
+            error_msg = f"File not found in MinIO: {book.file_path}"
+            logger.error("book_file_not_found", book_id=book_id, file_path=book.file_path)
+            book.processing_status = "failed"
+            book.processing_error = error_msg
+            db.commit()
+            return {
+                "success": False,
+                "book_id": book_id,
+                "error": error_msg
+            }
+        
         # Download file from MinIO to temporary location
         temp_file_path = download_book_from_minio(book.file_path)
         file_path = temp_file_path
